@@ -102,3 +102,18 @@ async function callGroq(prompt, keyIndex) {
         }
       }
     }
+    // All Groq keys exhausted — try Gemini fallback
+  if (GEMINI_KEY) {
+    console.warn('[groqService] All Groq keys exhausted, falling back to Gemini...');
+    try {
+      return await callGemini(prompt);
+    } catch (err) {
+      console.error('[groqService] Gemini fallback failed:', err.message);
+    }
+  }
+
+  console.error('[groqService] All AI providers failed');
+  return null;
+}
+
+module.exports = { generateAI };
