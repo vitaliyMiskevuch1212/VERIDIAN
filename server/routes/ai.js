@@ -233,3 +233,21 @@ Return a JSON object with EXACTLY these fields:
       analyzedAt: new Date().toISOString()
     };
 
+// Save to MongoDB
+    if (BriefCache) {
+      try {
+        await BriefCache.findOneAndUpdate(
+          { countryName: country },
+          { ...brief, updatedAt: new Date() },
+          { upsert: true, new: true }
+        );
+      } catch (e) { /* DB save failed */ }
+    }
+
+    res.json(brief);
+  } catch (err) {
+    console.error('[ai/brief] Error:', err.message);
+    res.json({ countryName: req.body?.country || 'Unknown', ...DEMO_BRIEF, demo: true });
+  }
+});
+
