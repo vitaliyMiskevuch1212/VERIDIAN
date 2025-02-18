@@ -116,31 +116,3 @@ router.post('/brief', async (req, res) => {
         }
       } catch (e) { /* DB unavailable */ }
     }
-
-//---- GATHER ALL LIVE CONTEXT ----
-    const ctx = gatherLiveContext(country);
-
-    const eventSummary = ctx.countryEvents.length > 0
-      ? ctx.countryEvents.slice(0, 10).map(e => `[${e.severity}] ${e.title} (${e.type})`).join('\n  - ')
-      : 'No direct events currently tracked for this country.';
-
-    const newsSummary = ctx.countryNews.length > 0
-      ? ctx.countryNews.slice(0, 8).map(n => `[${n.severity}] ${n.title} (${n.source || 'OSINT'})`).join('\n  - ')
-      : (headlines || []).slice(0, 10).join('\n  - ') || 'No recent headlines available.';
-
-    const flightSummary = ctx.countryFlights.length > 0
-      ? ctx.countryFlights.slice(0, 5).map(f => `${f.callsign} — ${f.aircraftType} at ${f.altitude}ft from ${f.origin}`).join('\n  - ')
-      : 'No military flights currently detected near this country.';
-
-    const cyberSummary = ctx.countryCyber.length > 0
-      ? ctx.countryCyber.map(c => `${c.type.toUpperCase()} threat (${c.severity}) — host ${c.host}`).join('\n  - ')
-      : 'No active cyber threats originating from this country.';
-
-    const globalTensionEvents = ctx.allEvents.filter(e => e.severity === 'CRITICAL').length;
-    const cryptoContext = ctx.financeOverview?.crypto
-      ? ctx.financeOverview.crypto.map(c => `${c.symbol}: $${c.price?.toLocaleString()} (${c.change >= 0 ? '+' : ''}${c.change?.toFixed(2)}%)`).join(', ')
-      : '';
-    const fearGreedContext = ctx.financeOverview?.fearGreed
-      ? `Fear & Greed Index: ${ctx.financeOverview.fearGreed.value} (${ctx.financeOverview.fearGreed.label})`
-      : '';
-
