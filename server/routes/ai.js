@@ -50,3 +50,97 @@ const DEMO_SIGNAL = {
   correlatedAssets: ['Defense ETFs (ITA, XAR)', 'Energy commodities (CL, NG)', 'Safe havens (GLD, TLT)'],
   stopLossReasoning: 'Exit if diplomatic breakthrough resolves the primary conflict driver, as this would rapidly deflate the risk premium currently priced in.'
 };
+
+// ============================================================
+//  HELPER: Gather all live context from cache
+// ============================================================
+
+function gatherLiveContext(country) {
+  const events = cache.get('events') || [];
+  const news = cache.get('news') || [];
+  const flights = cache.get('flights') || [];
+  const cyber = cache.get('cyber') || [];
+  const financeOverview = cache.get('finance_overview') || {};
+
+   // Filter context relevant to this country
+  const countryLower = (country || '').toLowerCase();
+
+  const countryEvents = events.filter(e =>
+    (e.country || '').toLowerCase().includes(countryLower) ||
+    (e.title || '').toLowerCase().includes(countryLower)
+  );
+
+  const countryNews = news.filter(n =>
+    (n.title || '').toLowerCase().includes(countryLower) ||
+    (n.region || '').toLowerCase().includes(countryLower)
+  );
+
+  const countryFlights = flights.filter(f => {
+    if (!f.nearConflictZone) return false;
+    return f.nearConflictZone.toLowerCase().includes(countryLower) ||
+           (f.origin || '').toLowerCase().includes(countryLower);
+  });
+
+  const countryCyber = cyber.filter(c =>
+    (c.country || '').toLowerCase().includes(countryLower)
+  );
+
+  return {
+    allEvents: events,
+    allNews: news,
+    allFlights: flights,
+    allCyber: cyber,
+    financeOverview,
+    countryEvents,
+    countryNews,
+    countryFlights,
+    countryCyber
+  };
+}
+
+// ============================================================
+//  POST /api/ai/brief — DEEP COUNTRY INTELLIGENCE BRIEF
+// ============================================================
+
+router.post('/brief', async (req, res) => {
+  try {
+    const { country, headlines } = req.body;
+    if (!country) return res.status(400).json({ error: 'Country name is required' });
+
+    // Check MongoDB cache first (with 1-hour expiry consideration)
+    if (BriefCache) {
+      try {
+        const cached = await BriefCache.findOne({ countryName: country });
+        if (cached && cached.updatedAt && (Date.now() - new Date(cached.updatedAt).getTime() < 60 * 60 * 1000)) {
+          return res.json({ ...cached.toObject(), cached: true });
+        }
+      } catch (e) { /* DB unavailable */ }
+    }
+
+//---- GATHER ALL LIVE CONTEXT ----
+    const ctx = gatherLiveContext(country);
+
+    const eventSummary = ctx.countryEvents.length > 0
+      ? ctx.countryEvents.slice(0, 10).map(e => `[${e.severity}] ${e.title} (${e.type})`).join('\n  - ')
+      : 'No direct events currently tracked for this country.';
+
+    const newsSummary = ctx.countryNews.length > 0
+      ? ctx.countryNews.slice(0, 8).map(n => `[${n.severity}] ${n.title} (${n.source || 'OSINT'})`).join('\n  - ')
+      : (headlines || []).slice(0, 10).join('\n  - ') || 'No recent headlines available.';
+
+    const flightSummary = ctx.countryFlights.length > 0
+      ? ctx.countryFlights.slice(0, 5).map(f => `${f.callsign} — ${f.aircraftType} at ${f.altitude}ft from ${f.origin}`).join('\n  - ')
+      : 'No military flights currently detected near this country.';
+
+    const cyberSummary = ctx.countryCyber.length > 0
+      ? ctx.countryCyber.map(c => `${c.type.toUpperCase()} threat (${c.severity}) — host ${c.host}`).join('\n  - ')
+      : 'No active cyber threats originating from this country.';
+
+    const globalTensionEvents = ctx.allEvents.filter(e => e.severity === 'CRITICAL').length;
+    const cryptoContext = ctx.financeOverview?.crypto
+      ? ctx.financeOverview.crypto.map(c => `${c.symbol}: $${c.price?.toLocaleString()} (${c.change >= 0 ? '+' : ''}${c.change?.toFixed(2)}%)`).join(', ')
+      : '';
+    const fearGreedContext = ctx.financeOverview?.fearGreed
+      ? `Fear & Greed Index: ${ctx.financeOverview.fearGreed.value} (${ctx.financeOverview.fearGreed.label})`
+      : '';
+
