@@ -22,3 +22,21 @@ function set(key, data, ttl = DEFAULT_TTL) {
     expiresAt: Date.now() + ttl
   });
 }
+function del(key) {
+    cache.delete(key);
+  }
+  
+  function clear() {
+    cache.clear();
+  }
+  
+  // Periodic cleanup every 10 minutes
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of cache) {
+      if (now > entry.expiresAt) cache.delete(key);
+    }
+  }, 10 * 60 * 1000);
+  
+  module.exports = { get, set, del, clear };
+  
