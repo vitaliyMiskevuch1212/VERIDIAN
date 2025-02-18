@@ -251,3 +251,82 @@ Return a JSON object with EXACTLY these fields:
   }
 });
 
+// ============================================================
+//  POST /api/ai/signal — DEEP TRADING SIGNAL WITH FULL CONTEXT
+// ============================================================
+
+router.post('/signal', async (req, res) => {
+  try {
+    const { ticker, events: clientEvents } = req.body;
+    if (!ticker) return res.status(400).json({ error: 'Ticker symbol is required' });
+
+    // Gather all available context
+    const allEvents = cache.get('events') || [];
+    const allNews = cache.get('news') || [];
+    const financeOverview = cache.get('finance_overview') || {};
+
+    // Prioritize events from the client if provided, otherwise use cache
+    const contextEvents = (clientEvents && clientEvents.length > 0) ? clientEvents : allEvents.filter(e => e.severity === 'CRITICAL' || e.severity === 'HIGH').map(e => e.title);
+    const criticalEvents = allEvents.filter(e => e.severity === 'CRITICAL').map(e => e.title);
+    const highEvents = allEvents.filter(e => e.severity === 'HIGH').map(e => e.title).slice(0, 5);
+    const topNews = allNews.slice(0, 10).map(n => `[${n.severity}] ${n.title}`);
+
+    // Merge everything for the AI to analyze
+    const intelligenceContext = [...new Set([...contextEvents, ...criticalEvents, ...highEvents])];
+
+    const cryptoContext = financeOverview?.crypto
+      ? financeOverview.crypto.map(c => `${c.symbol}: $${c.price?.toLocaleString()} (${c.change >= 0 ? '+' : ''}${c.change?.toFixed(2)}%)`).join(', ')
+      : '';
+    const fearGreed = financeOverview?.fearGreed
+      ? `Fear & Greed: ${financeOverview.fearGreed.value} (${financeOverview.fearGreed.label})`
+      : '';
+
+    const prompt = `You are VERIDIAN GeoTrade AI, generating a DEEP trading signal for ${ticker.toUpperCase()}.
+
+TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+
+=== LIVE INTELLIGENCE FEEDS (CONSOLIDATED) ===
+
+KEY GEOPOLITICAL EVENTS & SIGNALS:
+${intelligenceContext.length > 0 ? intelligenceContext.map(e => `  - ${e}`).join('\n') : '  - No specific critical events detected; analyzing baseline stability'}
+
+TOP NEWS CONTEXT:
+${topNews.length > 0 ? topNews.map(n => `  - ${n}`).join('\n') : '  - No live headlines available'}
+
+MARKET DATA HUD:
+  - ${cryptoContext || 'No live crypto data'}
+  - ${fearGreed || 'No sentiment data'}
+
+=== YOUR TASK ===
+Perform a cross-domain correlation analysis. Connect the LIVE events above directly to ${ticker}'s specific business vulnerabilities and market sensitivities. Your reasoning must be specific — cite the exact events above that drive your BUY/HOLD/SELL recommendation.
+
+Return a JSON object with EXACTLY these fields:
+{
+  "signal": "<BUY|HOLD|SELL>",
+  "confidence": <0-100>,
+  "reasoning": "Detailed 4-5 sentence analysis of how these EXACT events influence ${ticker}. Explain the causal logic clearly.",
+  "geopoliticalFactors": ["Identified 3-4 specific drivers from the intelligence context"],
+  "riskFactors": ["3 factors that could disrupt this specific assessment"],
+  "timeHorizon": "<SHORT|MEDIUM|LONG>",
+  "correlatedAssets": ["4-5 relevant tickers with 1-sentence logic for each"],
+  "stopLossReasoning": "Specific intelligence trigger that should invalidate this position"
+}`;
+
+    const aiResult = await generateAI(prompt);
+
+    if (!aiResult) {
+      return res.json({ ticker, ...DEMO_SIGNAL, demo: true });
+    }
+
+    const signal = {
+      ticker,
+      signal: ['BUY', 'HOLD', 'SELL'].includes(aiResult.signal) ? aiResult.signal : 'HOLD',
+      confidence: Math.min(100, Math.max(0, parseInt(aiResult.confidence) || 50)),
+      reasoning: aiResult.reasoning || DEMO_SIGNAL.reasoning,
+      geopoliticalFactors: Array.isArray(aiResult.geopoliticalFactors) ? aiResult.geopoliticalFactors.slice(0, 4) : DEMO_SIGNAL.geopoliticalFactors,
+      riskFactors: Array.isArray(aiResult.riskFactors) ? aiResult.riskFactors.slice(0, 3) : DEMO_SIGNAL.riskFactors,
+      timeHorizon: ['SHORT', 'MEDIUM', 'LONG'].includes(aiResult.timeHorizon) ? aiResult.timeHorizon : 'MEDIUM',
+      correlatedAssets: Array.isArray(aiResult.correlatedAssets) ? aiResult.correlatedAssets.slice(0, 5) : DEMO_SIGNAL.correlatedAssets,
+      stopLossReasoning: aiResult.stopLossReasoning || DEMO_SIGNAL.stopLossReasoning,
+      analyzedAt: new Date().toISOString()
+    };
