@@ -65,3 +65,18 @@ export default function DashboardCenter() {
                 <i className="fa-solid fa-map text-sm"></i>
               </button>
             </div>
+
+            <div className="flex items-center gap-1.5">
+              <button onMouseEnter={audio.playHover} onClick={() => { setShowFlights(!showFlights); audio.playClick(); }} className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showFlights ? 'text-[var(--color-cyan)] bg-[var(--color-cyan)]/20' : 'text-muted'}`} title="Military Intelligence">
+                <i className="fa-solid fa-fighter-jet text-[10px]"></i>
+              </button>
+              <button onMouseEnter={audio.playHover} onClick={() => { setShowCyber(!showCyber); audio.playClick(); }} className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showCyber ? 'text-[var(--color-purple)] bg-[var(--color-purple)]/20' : 'text-muted'}`} title="Cyber Threats">
+                <i className="fa-solid fa-shield-halved text-[10px]"></i>
+              </button>
+              <button onMouseEnter={audio.playHover} onClick={() => { setShowRegions(!showRegions); audio.playClick(); }} className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showRegions ? 'text-[var(--color-cyan)] bg-[var(--color-cyan)]/20' : 'text-muted'}`} title="Regions">
+                <i className="fa-solid fa-chart-pie text-[10px]"></i>
+              </button>
+              <button onMouseEnter={audio.playHover} onClick={() => { setShowHeatmap(!showHeatmap); audio.playClick(); }} className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showHeatmap ? 'text-[#ff4500] bg-[#ff4500]/20' : 'text-muted'}`} title="Threat Heatmap">
+                <i className="fa-solid fa-fire-flame-curved text-[10px]"></i>
+              </button>
+            </div>
