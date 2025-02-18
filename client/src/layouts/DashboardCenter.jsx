@@ -41,3 +41,17 @@ export default function DashboardCenter() {
     scrubTime,
     setScrubTime
   } = useUI();
+
+   return (
+    <div className="flex-1 relative overflow-hidden">
+      {/* Filter Bar + View Controls */}
+      <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
+        <div className="pointer-events-auto backdrop-blur-md bg-black/40 border-b border-white/5 px-2 min-h-[48px] py-1 flex flex-wrap items-center gap-2">
+          <div className="flex-1 min-w-[300px]">
+            <FilterBar
+              activeFilters={activeFilters}
+              onToggle={handleFilterToggle}
+              timeRange={timeRange}
+              onTimeChange={setTimeRange}
+            />
+          </div>
