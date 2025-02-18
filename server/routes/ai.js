@@ -50,3 +50,14 @@ const DEMO_SIGNAL = {
   correlatedAssets: ['Defense ETFs (ITA, XAR)', 'Energy commodities (CL, NG)', 'Safe havens (GLD, TLT)'],
   stopLossReasoning: 'Exit if diplomatic breakthrough resolves the primary conflict driver, as this would rapidly deflate the risk premium currently priced in.'
 };
+
+// ============================================================
+//  HELPER: Gather all live context from cache
+// ============================================================
+
+function gatherLiveContext(country) {
+  const events = cache.get('events') || [];
+  const news = cache.get('news') || [];
+  const flights = cache.get('flights') || [];
+  const cyber = cache.get('cyber') || [];
+  const financeOverview = cache.get('finance_overview') || {};
