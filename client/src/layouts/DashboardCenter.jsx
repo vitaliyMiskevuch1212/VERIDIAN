@@ -137,18 +137,3 @@ export default function DashboardCenter() {
           onCategoryChange={setFlightCategory} 
         />
       )} 
-
-
-
-        {/* Legend */}
-      <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
-        <div className="bg-[#060B14]/80 backdrop-blur-xl border border-white/5 py-2 px-3 flex items-center gap-4 text-[9px] uppercase tracking-tighter font-mono rounded-sm pointer-events-auto">
-          <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span><span className="text-white/60">Critical</span></div>
-          <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span><span className="text-white/60">High</span></div>
-          <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span><span className="text-white/60">Medium</span></div>
-          <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span className="text-white/60">Low</span></div>
-        </div>
-      </div>
-    </div>
-  );
-}
