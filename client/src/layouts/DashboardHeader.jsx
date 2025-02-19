@@ -14,23 +14,3 @@ export default function DashboardHeader() {
     defconLevel,
     handleTickerEventClick 
   } = useUI();
-
-  return (
-    <>
-      {/* 1. TOP Ticker bar */}
-      <Ticker events={news} onEventClick={handleTickerEventClick} />
-
-      {/* 2. Brand Navbar */}
-      <Navbar 
-        activeCount={missionMetrics.active} 
-        tensionCount={missionMetrics.tensions} 
-        isCommsActive={isCommsActive}
-        onCommsToggle={handleCommsToggle}
-        onPredictionsClick={() => setActiveTab('predictions')}
-        isConnected={isConnected}
-        serverClients={serverClients}
-        defconLevel={defconLevel}
-      />
-    </>
-  );
-}
