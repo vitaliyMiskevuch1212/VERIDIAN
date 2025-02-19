@@ -330,3 +330,17 @@ Return a JSON object with EXACTLY these fields:
       stopLossReasoning: aiResult.stopLossReasoning || DEMO_SIGNAL.stopLossReasoning,
       analyzedAt: new Date().toISOString()
     };
+
+    // Save to SignalHistory
+    if (SignalHistory) {
+      try {
+        await new SignalHistory(signal).save();
+      } catch (e) { /* DB save failed */ }
+    }
+
+    res.json(signal);
+  } catch (err) {
+    console.error('[ai/signal] Error:', err.message);
+    res.json({ ticker: req.body?.ticker || 'UNKNOWN', ...DEMO_SIGNAL, demo: true });
+  }
+});
