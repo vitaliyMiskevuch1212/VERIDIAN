@@ -366,3 +366,30 @@ router.get('/regions', async (req, res) => {
     const allNews = cache.get('news') || [];
     const allFlights = cache.get('flights') || [];
     const allCyber = cache.get('cyber') || []; 
+
+ // Build per-region context
+    const regionContexts = REGION_DEFINITIONS.map(region => {
+      const matchesRegion = (text) =>
+        region.countries.some(c => (text || '').toLowerCase().includes(c));
+
+      const regionEvents = allEvents.filter(e => matchesRegion(e.country) || matchesRegion(e.title));
+      const regionNews = allNews.filter(n => matchesRegion(n.title) || n.region === region.name);
+      const regionFlights = allFlights.filter(f => matchesRegion(f.nearConflictZone) || matchesRegion(f.origin));
+      const regionCyber = allCyber.filter(c => matchesRegion(c.country));
+
+      const criticalCount = regionEvents.filter(e => e.severity === 'CRITICAL').length;
+      const highCount = regionEvents.filter(e => e.severity === 'HIGH').length;
+
+      return {
+        name: region.name,
+        icon: region.icon,
+        criticalEvents: criticalCount,
+        highEvents: highCount,
+        totalEvents: regionEvents.length,
+        newsCount: regionNews.length,
+        flightsNearby: regionFlights.length,
+        cyberThreats: regionCyber.length,
+        topHeadlines: regionNews.slice(0, 3).map(n => n.title),
+        topEvents: regionEvents.slice(0, 3).map(e => ({ title: e.title, severity: e.severity }))
+      };
+    });
