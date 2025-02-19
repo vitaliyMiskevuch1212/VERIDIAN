@@ -93,3 +93,18 @@ export default function DashboardCenter() {
           </div>
         </div>
       </div>
+
+       {/* Globe / Map */}
+      <div id="tactical-map-container" className="absolute inset-0 z-0 bg-[#060B14]">
+        <ErrorBoundary name="Tactical Map">
+        {viewMode === 'globe' ? (
+          <Globe 
+            events={filteredEvents} 
+            flights={filteredFlights} 
+            cyber={cyber} 
+            showFlights={showFlights} 
+            showCyber={showCyber} 
+            showHeatmap={showHeatmap}
+            onCountryClick={handleCountryClick} 
+            flyToTarget={flyToTarget} 
+          />
