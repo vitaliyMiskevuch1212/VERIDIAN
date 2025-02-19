@@ -116,3 +116,24 @@ export default function DashboardCenter() {
             onCountryClick={handleCountryClick} 
           />
         )}
+         </ErrorBoundary>
+      </div>
+
+      {/* Region Panel Overlay */}
+      {showRegions && (
+        <div className="absolute bottom-36 left-4 right-4 z-20 pointer-events-auto animate-fade-in-up">
+          <RegionPanel events={filteredEvents} onRegionClick={handleRegionClick} aiRegions={aiRegions} />
+        </div>
+      )}
+
+      {/* Tension Chart Overlay */}
+      <TensionChart events={filteredEvents} news={news} />
+
+      {/* Military Flight Console */}
+      {showFlights && (
+        <FlightConsole 
+          flights={flights} 
+          activeCategory={flightCategory} 
+          onCategoryChange={setFlightCategory} 
+        />
+      )} 
