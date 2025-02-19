@@ -32,3 +32,65 @@ const CATEGORY_MAP = {
 function getAircraftType(cat) {
   return CATEGORY_MAP[cat] || 'Multi-Role Tactical';
 }
+// Haversine distance in km
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  
+  const DEMO_FLIGHTS = [
+    { callsign: 'RCH401', lat: 49.05, lng: 33.42, altitude: 35000, velocity: 480, origin: 'United States', aircraftType: 'Heavy Transport', isNearConflict: true, nearConflictZone: 'Ukraine', isSurge: false },
+    { callsign: 'HAWK12', lat: 35.20, lng: 36.80, altitude: 28000, velocity: 520, origin: 'United Kingdom', aircraftType: 'High Maneuverable', isNearConflict: true, nearConflictZone: 'Syria', isSurge: false },
+    { callsign: 'NATO05', lat: 50.45, lng: 30.52, altitude: 42000, velocity: 440, origin: 'NATO', aircraftType: 'Strategic AWACS', isNearConflict: true, nearConflictZone: 'Ukraine', isSurge: true },
+    { callsign: 'GHOST_UAV', lat: 31.80, lng: 34.78, altitude: 18000, velocity: 120, origin: 'Unknown', aircraftType: 'UAV / Recon Drone', isNearConflict: true, nearConflictZone: 'Gaza', isSurge: false },
+    { callsign: 'REACH3', lat: 15.90, lng: 44.60, altitude: 38000, velocity: 460, origin: 'United States', aircraftType: 'Heavy Transport', isNearConflict: true, nearConflictZone: 'Yemen', isSurge: false },
+    { callsign: 'DUKE88', lat: 24.50, lng: 119.50, altitude: 30000, velocity: 500, origin: 'United States', aircraftType: 'Large Strategic', isNearConflict: true, nearConflictZone: 'Taiwan Strait', isSurge: false },
+  ];
+  // GET /api/flights
+router.get('/', async (req, res) => {
+    try {
+      const cached = cache.get('flights');
+      if (cached) return res.json(cached);
+  
+      let flights = [];
+      try {
+        // 🛰️ REAL-TIME OPENSKY FETCH
+        const osRes = await axios.get('https://opensky-network.org/api/states/all', { 
+          timeout: 10000,
+          headers: { 'Accept-Encoding': 'gzip' } 
+        });
+        const states = osRes.data?.states || [];
+  
+        flights = states
+          .filter(s => {
+            const callsign = (s[1] || '').trim();
+            const category = s[17];
+            // Filter by military pattern OR specific high-interest categories (7=Fighter, 13=UAV)
+            return MILITARY_PATTERNS.test(callsign) || category === 7 || category === 13;
+          })
+          .slice(0, 50) // Increased for more tactical density
+          .map(s => {
+            const callsign = (s[1] || '').trim() || 'UNKNOWN';
+            const lat = s[6] || 0;
+            const lng = s[5] || 0;
+            const altitude = s[7] ? Math.round(s[7] * 3.281) : 0; // m to ft
+            const velocity = s[9] ? Math.round(s[9] * 1.944) : 0; // m/s to knots
+            const origin = s[2] || 'Unknown';
+            const aircraftType = getAircraftType(s[17]);
+  
+            let isNearConflict = false;
+            let nearConflictZone = null;
+            for (const zone of CONFLICT_ZONES) {
+              if (haversine(lat, lng, zone.lat, zone.lng) < zone.radius) {
+                isNearConflict = true;
+                nearConflictZone = zone.name;
+                break;
+              }
+            }
+  
+            return { callsign, lat, lng, altitude, velocity, origin, aircraftType, isNearConflict, nearConflictZone, isSurge: false };
+          });
+  
