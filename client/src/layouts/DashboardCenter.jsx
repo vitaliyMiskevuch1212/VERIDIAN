@@ -80,3 +80,16 @@ export default function DashboardCenter() {
                 <i className="fa-solid fa-fire-flame-curved text-[10px]"></i>
               </button>
             </div>
+
+             {/* HIDE PANELS TOGGLE */}
+            <button 
+              onMouseEnter={audio.playHover}
+              onClick={() => { setPanelsVisible(!panelsVisible); audio.playClick(); }} 
+              className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ml-2 ${!panelsVisible ? 'text-[var(--color-gold)] bg-[var(--color-gold)]/20' : 'text-muted'}`} 
+              title={panelsVisible ? "Hide Intel Panels" : "Show Intel Panels"}
+            >
+              <i className={`fa-solid ${panelsVisible ? 'fa-eye-slash' : 'fa-eye'} text-[10px]`}></i>
+            </button>
+          </div>
+        </div>
+      </div>
