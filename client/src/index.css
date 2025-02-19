@@ -271,3 +271,81 @@ select {
   animation: radarPulse 2s infinite;
   border-radius: 50%;
 }
+/* ========================================
+   Toast Notification Animations
+   ======================================== */
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+@keyframes toastProgress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* ========================================
+   DEFCON Dynamic Theming System
+   ======================================== */
+
+/* DEFCON 5 — LOW (Default: Cool cyan/blue) */
+[data-defcon="5"], :root {
+  --defcon-accent: var(--color-cyan);
+  --defcon-glow: rgba(0, 212, 255, 0.06);
+  --defcon-border: rgba(0, 212, 255, 0.20);
+  --defcon-bg-shift: #0A0F1E;
+  --defcon-panel-tint: rgba(0, 212, 255, 0.02);
+}
+
+/* DEFCON 4 — GUARDED (Blue tinge) */
+[data-defcon="4"] {
+  --defcon-accent: #4A9EFF;
+  --defcon-glow: rgba(74, 158, 255, 0.08);
+  --defcon-border: rgba(74, 158, 255, 0.25);
+  --defcon-bg-shift: #0A0E1E;
+  --defcon-panel-tint: rgba(74, 158, 255, 0.02);
+}
+
+/* DEFCON 3 — ELEVATED (Amber/gold shift) */
+[data-defcon="3"] {
+  --defcon-accent: #F59E0B;
+  --defcon-glow: rgba(245, 158, 11, 0.08);
+  --defcon-border: rgba(245, 158, 11, 0.25);
+  --defcon-bg-shift: #12100A;
+  --defcon-panel-tint: rgba(245, 158, 11, 0.02);
+}
+
+/* DEFCON 2 — HIGH (Orange/red warning) */
+[data-defcon="2"] {
+  --defcon-accent: #F97316;
+  --defcon-glow: rgba(249, 115, 22, 0.10);
+  --defcon-border: rgba(249, 115, 22, 0.30);
+  --defcon-bg-shift: #140E0A;
+  --defcon-panel-tint: rgba(249, 115, 22, 0.03);
+}
+
+/* DEFCON 1 — SEVERE (Full red alert) */
+[data-defcon="1"] {
+  --defcon-accent: #EF4444;
+  --defcon-glow: rgba(239, 68, 68, 0.12);
+  --defcon-border: rgba(239, 68, 68, 0.35);
+  --defcon-bg-shift: #160A0A;
+  --defcon-panel-tint: rgba(239, 68, 68, 0.04);
+}
