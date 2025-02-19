@@ -15,3 +15,20 @@ const CONFLICT_ZONES = [
   { name: 'Myanmar', lat: 19.76, lng: 96.07, radius: 300 },
   { name: 'Taiwan Strait', lat: 24.00, lng: 120.00, radius: 300 },
 ];
+// Expanded Military callsign patterns (Global SIGINT)
+const MILITARY_PATTERNS = /^(RCH|EVAC|JAKE|DOOM|EPIC|IRON|VIPER|TOPCAT|HAWK|RAZOR|COBRA|DUKE|KING|REACH|FORGE|NORM|NATO|AXE|BOLT|CADDY|AE|AF|SPAR|GLIDE|DRAGON|GHOST|DEATH|BONES|U2|SR71|VENOM|REAPER|HERC|TALON)/i;
+
+const CATEGORY_MAP = {
+  0: 'Unidentified',
+  2: 'Light Recon',
+  3: 'Small Tactical',
+  4: 'Large Strategic',
+  6: 'Heavy Transport',
+  7: 'High Maneuverable',
+  8: 'Rotorcraft',
+  13: 'UAV / Recon Drone'
+};
+
+function getAircraftType(cat) {
+  return CATEGORY_MAP[cat] || 'Multi-Role Tactical';
+}
