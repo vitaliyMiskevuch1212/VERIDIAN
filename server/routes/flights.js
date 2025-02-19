@@ -93,4 +93,28 @@ router.get('/', async (req, res) => {
   
             return { callsign, lat, lng, altitude, velocity, origin, aircraftType, isNearConflict, nearConflictZone, isSurge: false };
           });
+  // Detect surge: >4 high-interest aircraft within 400km of each other
+  flights.forEach(f => {
+    const nearby = flights.filter(o => o !== f && haversine(f.lat, f.lng, o.lat, o.lng) < 400);
+    if (nearby.length >= 4) {
+      f.isSurge = true;
+      nearby.forEach(n => { n.isSurge = true; });
+    }
+  });
   
+  console.log(`[flights] Successfully traced ${flights.length} tactical signals.`);
+} catch (err) {
+  console.warn('[flights] Real-time trace failed, deploying synthetic intel:', err.message);
+}
+
+const result = flights.length > 0 ? flights : DEMO_FLIGHTS;
+
+cache.set('flights', result, 60); // Cache for 60s
+res.json(result);
+} catch (err) {
+console.error('[flights] Critical Error:', err.message);
+res.json(DEMO_FLIGHTS);
+}
+});
+
+module.exports = router;
