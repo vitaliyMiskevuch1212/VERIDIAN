@@ -330,39 +330,3 @@ Return a JSON object with EXACTLY these fields:
       stopLossReasoning: aiResult.stopLossReasoning || DEMO_SIGNAL.stopLossReasoning,
       analyzedAt: new Date().toISOString()
     };
-
-    // Save to SignalHistory
-    if (SignalHistory) {
-      try {
-        await new SignalHistory(signal).save();
-      } catch (e) { /* DB save failed */ }
-    }
-
-    res.json(signal);
-  } catch (err) {
-    console.error('[ai/signal] Error:', err.message);
-    res.json({ ticker: req.body?.ticker || 'UNKNOWN', ...DEMO_SIGNAL, demo: true });
-  }
-});
-
-// ============================================================
-//  GET /api/ai/regions — AI-COMPUTED REGIONAL STABILITY
-// ============================================================
-
-const REGION_DEFINITIONS = [
-  { name: 'Middle East', countries: ['iraq', 'syria', 'iran', 'yemen', 'lebanon', 'israel', 'palestine', 'saudi', 'jordan', 'oman', 'qatar', 'kuwait', 'bahrain', 'uae'], icon: 'fa-mosque' },
-  { name: 'Europe', countries: ['ukraine', 'russia', 'poland', 'germany', 'france', 'united kingdom', 'uk', 'britain', 'romania', 'hungary', 'moldova', 'belarus', 'finland', 'sweden', 'norway'], icon: 'fa-landmark' },
-  { name: 'Asia-Pacific', countries: ['china', 'taiwan', 'japan', 'philippines', 'india', 'north korea', 'south korea', 'australia', 'indonesia', 'vietnam', 'myanmar', 'thailand', 'pakistan', 'bangladesh', 'afghanistan'], icon: 'fa-torii-gate' },
-  { name: 'Americas', countries: ['united states', 'venezuela', 'brazil', 'mexico', 'colombia', 'argentina', 'chile', 'peru', 'cuba', 'haiti', 'ecuador', 'canada'], icon: 'fa-building-columns' },
-  { name: 'Africa', countries: ['nigeria', 'sudan', 'somalia', 'ethiopia', 'dr congo', 'chad', 'mali', 'libya', 'niger', 'cameroon', 'mozambique', 'south africa', 'kenya', 'egypt'], icon: 'fa-globe-africa' },
-];
-
-router.get('/regions', async (req, res) => {
-  try {
-    const cached = cache.get('ai_regions');
-    if (cached) return res.json(cached);
-
-    const allEvents = cache.get('events') || [];
-    const allNews = cache.get('news') || [];
-    const allFlights = cache.get('flights') || [];
-    const allCyber = cache.get('cyber') || []; 
