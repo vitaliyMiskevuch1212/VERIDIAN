@@ -111,33 +111,4 @@ async function fetchNewsAPI() {
       return [];
     }
   }
-  /**
- * Fetch from RSS feeds
- */
-async function fetchRSSFeeds() {
-    const results = [];
-    for (const feed of RSS_FEEDS) {
-      try {
-        const parsed = await rssParser.parseURL(feed.url);
-        const items = (parsed.items || []).slice(0, 10).map(item => {
-          const countryCode = detectCountry(item.title || '');
-          return {
-            title: item.title || '',
-            source: feed.source,
-            severity: scoreSeverity(item.title || ''),
-            url: item.link || '#',
-            publishedAt: item.pubDate || new Date().toISOString(),
-            iso2: countryCode,
-            region: REGION_MAP[countryCode] || 'Global',
-            sourceType: 'rss',
-            isBreaking: false
-          };
-        });
-        results.push(...items);
-      } catch (err) {
-        console.warn(`[news] RSS ${feed.source} failed:`, err.message);
-      }
-    }
-    return results;
-  }
   
