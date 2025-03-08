@@ -461,3 +461,35 @@ Return a JSON object:
     res.json([]);
   }
 });
+
+// ============================================================
+//  GET /api/ai/sitrep — GLOBAL SITUATIONAL REPORT
+// ============================================================
+
+router.get('/sitrep', async (req, res) => {
+  try {
+    const cached = cache.get('ai_sitrep');
+    if (cached) return res.json(cached);
+
+    const allEvents = cache.get('events') || [];
+    const allNews = cache.get('news') || [];
+    const allFlights = cache.get('flights') || [];
+    const allCyber = cache.get('cyber') || [];
+    const financeOverview = cache.get('finance_overview') || {};
+
+    const criticalEvents = allEvents.filter(e => e.severity === 'CRITICAL');
+    const highEvents = allEvents.filter(e => e.severity === 'HIGH');
+    const breakingNews = allNews.filter(n => n.isBreaking);
+
+    const cryptoSummary = financeOverview?.crypto
+      ? financeOverview.crypto.map(c => `${c.symbol}: $${c.price?.toLocaleString()} (${c.change >= 0 ? '+' : ''}${c.change?.toFixed(2)}%)`).join(', ')
+      : 'No live market data';
+    const fearGreed = financeOverview?.fearGreed
+      ? `${financeOverview.fearGreed.value}/100 (${financeOverview.fearGreed.label})`
+      : 'N/A';
+
+    const prompt = `You are VERIDIAN AI Command Center producing a GLOBAL SITUATIONAL REPORT (SITREP).
+
+TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+REPORT TIME: ${new Date().toISOString()}
+
