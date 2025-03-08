@@ -445,4 +445,19 @@ Return a JSON object:
       return res.json(fallback);
     }
   
+// Merge AI result with static data (icons, event counts)
+    const result = aiResult.regions.map((r, i) => ({
+      ...r,
+      icon: regionContexts[i]?.icon || 'fa-globe',
+      criticalEvents: regionContexts[i]?.criticalEvents || 0,
+      totalEvents: regionContexts[i]?.totalEvents || 0,
+      topEvents: regionContexts[i]?.topEvents || []
+    }));
 
+    cache.set('ai_regions', result, 5 * 60 * 1000);
+    res.json(result);
+  } catch (err) {
+    console.error('[ai/regions] Error:', err.message);
+    res.json([]);
+  }
+});
