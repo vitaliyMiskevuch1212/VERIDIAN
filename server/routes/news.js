@@ -81,34 +81,3 @@ function scoreSeverity(title) {
   if (SEVERITY_KEYWORDS.MEDIUM.test(title)) return 'MEDIUM';
   return 'LOW';
 }
-/**
- * Fetch from NewsAPI
- */
-async function fetchNewsAPI() {
-    const key = process.env.NEWS_API_KEY;
-    if (!key) return [];
-    try {
-      const res = await axios.get('https://newsapi.org/v2/top-headlines', {
-        params: { category: 'general', language: 'en', pageSize: 20, apiKey: key },
-        timeout: 10000
-      });
-      return (res.data?.articles || []).map(a => {
-        const countryCode = detectCountry(a.title || '');
-        return {
-          title: a.title || '',
-          source: a.source?.name || 'NewsAPI',
-          severity: scoreSeverity(a.title || ''),
-          url: a.url || '#',
-          publishedAt: a.publishedAt || new Date().toISOString(),
-          iso2: countryCode,
-          region: REGION_MAP[countryCode] || 'Global',
-          sourceType: 'newsapi',
-          isBreaking: false
-        };
-      });
-    } catch (err) {
-      console.warn('[news] NewsAPI fetch failed:', err.message);
-      return [];
-    }
-  }
-  
