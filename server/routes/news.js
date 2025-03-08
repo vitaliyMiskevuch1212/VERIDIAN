@@ -227,4 +227,28 @@ async function enrichWithAI(articles) {
       return articles;
     }
   }
+  // GET /api/news
+router.get('/', async (req, res) => {
+    try {
+      const cached = cache.get('news');
+      if (cached) return res.json(cached);
   
+      const [newsapi, rss] = await Promise.allSettled([fetchNewsAPI(), fetchRSSFeeds()]);
+  
+      let articles = [
+        ...(newsapi.status === 'fulfilled' ? newsapi.value : []),
+        ...(rss.status === 'fulfilled' ? rss.value : []),
+      ];
+  
+      articles = detectBreaking(articles);
+      articles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  
+      let enriched = articles.length > 0 ? articles : DEMO_NEWS;
+      enriched = await enrichWithAI(enriched);
+  
+      cache.set('news', enriched);
+      res.json(enriched);
+    } catch (err) {
+      res.json(DEMO_NEWS);
+    }
+  });
