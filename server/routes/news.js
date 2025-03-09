@@ -252,11 +252,3 @@ router.get('/', async (req, res) => {
       res.json(DEMO_NEWS);
     }
   });
-  // Helper route to force clear cache
-router.get('/clear', (req, res) => {
-    cache.del('news');
-    res.json({ message: 'News cache cleared' });
-  });
-  
-  module.exports = router;
-  
