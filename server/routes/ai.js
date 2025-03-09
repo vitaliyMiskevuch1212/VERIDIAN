@@ -493,3 +493,97 @@ router.get('/sitrep', async (req, res) => {
 TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
 REPORT TIME: ${new Date().toISOString()}
 
+=== GLOBAL INTELLIGENCE SNAPSHOT ===
+
+CRITICAL EVENTS (${criticalEvents.length} active):
+${criticalEvents.length > 0 ? criticalEvents.map(e => `  - [${e.country || 'Unknown'}] ${e.title}`).join('\n') : '  - No critical events'}
+
+HIGH-SEVERITY EVENTS (${highEvents.length} active):
+${highEvents.slice(0, 10).map(e => `  - [${e.country || 'Unknown'}] ${e.title}`).join('\n') || '  - None'}
+
+BREAKING NEWS (${breakingNews.length}):
+${breakingNews.slice(0, 5).map(n => `  - ${n.title}`).join('\n') || '  - None'}
+
+TOP NEWS HEADLINES:
+${allNews.slice(0, 12).map(n => `  - [${n.severity}] ${n.title}`).join('\n') || '  - No headlines'}
+
+MILITARY ACTIVITY:
+  - ${allFlights.length} military aircraft tracked globally
+  - ${allFlights.filter(f => f.isNearConflict).length} near active conflict zones
+  - ${allFlights.filter(f => f.isSurge).length} in surge formation patterns
+
+CYBER THREAT LANDSCAPE:
+  - ${allCyber.length} active threat nodes tracked
+  - ${allCyber.filter(c => c.severity === 'CRITICAL').length} CRITICAL threats
+
+FINANCIAL MARKETS:
+  - Crypto: ${cryptoSummary}
+  - Market Sentiment: ${fearGreed}
+
+=== YOUR TASK ===
+Produce a comprehensive GLOBAL SITUATIONAL REPORT. Cross-reference ALL data sources. Identify emerging patterns, escalation cascades, and second-order effects. This should read like a presidential daily briefing.
+
+Return a JSON object with EXACTLY these fields:
+{
+  "globalThreatLevel": "<LOW|GUARDED|ELEVATED|HIGH|SEVERE>",
+  "summary": "4-5 paragraph comprehensive world situation assessment. Reference SPECIFIC events above. Analyze how different crises interact and cascade. Discuss implications for global stability.",
+  "topThreats": [
+    { "title": "Concise threat name", "severity": "CRITICAL|HIGH", "region": "Region name", "description": "2-sentence analysis with specific references to live data" },
+    ... (top 4-5 threats)
+  ],
+  "escalationWatch": ["3-4 situations from live data that could escalate in the next 24-48 hours with specific reasoning"],
+  "marketImplications": "2-3 paragraph analysis of how current geopolitical events affect global markets, citing specific events and their market impact sectors",
+  "emergingPatterns": ["3-4 cross-event patterns the AI has identified, e.g. coordinated activity, cascading effects"],
+  "recommendations": ["3-4 actionable intelligence recommendations for traders/analysts based on current data"]
+}`;
+
+    const aiResult = await generateAI(prompt);
+
+    const DEMO_SITREP = {
+      globalThreatLevel: 'ELEVATED',
+      summary: `Global threat environment remains elevated with ${criticalEvents.length} critical events actively monitored across multiple regions. Military flight activity shows ${allFlights.length} tracked aircraft with ${allFlights.filter(f => f.isNearConflict).length} operating near conflict zones.\n\nThe cyber threat landscape shows ${allCyber.length} active threat nodes requiring continuous monitoring. Market sentiment reflects underlying geopolitical uncertainty.\n\nIntelligence analysts recommend heightened vigilance across all monitoring sectors. Cross-domain effects between military, cyber, and economic domains continue to compound regional instability.`,
+      topThreats: criticalEvents.slice(0, 4).map(e => ({
+        title: e.title,
+        severity: 'CRITICAL',
+        region: e.country || 'Global',
+        description: `Active critical event in ${e.country || 'undetermined region'}. Classified as ${e.type || 'multi-domain'} threat requiring continuous monitoring.`
+      })),
+      escalationWatch: ['Monitor critical event corridors for secondary escalation', 'Track military flight surge patterns for deployment changes', 'Watch for cyber threat correlation with kinetic events'],
+      marketImplications: 'Current geopolitical conditions suggest elevated risk premiums across defense, energy, and precious metals sectors. Safe haven flows may accelerate if additional critical events emerge. Traders should monitor conflict-adjacent supply chains for disruption signals.',
+      emergingPatterns: ['Multi-domain threat correlation between kinetic and cyber events', 'Increased military reconnaissance near contested regions', 'Market sentiment divergence from fundamental indicators'],
+      recommendations: ['Increase position hedging in conflict-exposed sectors', 'Monitor CRITICAL event count for trend changes', 'Track military flight density as leading indicator'],
+      demo: true
+    };
+
+    if (!aiResult) {
+      const result = { ...DEMO_SITREP, analyzedAt: new Date().toISOString() };
+      cache.set('ai_sitrep', result, 15 * 60 * 1000);
+      return res.json(result);
+    }
+
+    const sitrep = {
+      globalThreatLevel: ['LOW', 'GUARDED', 'ELEVATED', 'HIGH', 'SEVERE'].includes(aiResult.globalThreatLevel) ? aiResult.globalThreatLevel : 'ELEVATED',
+      summary: aiResult.summary || DEMO_SITREP.summary,
+      topThreats: Array.isArray(aiResult.topThreats) ? aiResult.topThreats.slice(0, 5) : DEMO_SITREP.topThreats,
+      escalationWatch: Array.isArray(aiResult.escalationWatch) ? aiResult.escalationWatch.slice(0, 4) : DEMO_SITREP.escalationWatch,
+      marketImplications: aiResult.marketImplications || DEMO_SITREP.marketImplications,
+      emergingPatterns: Array.isArray(aiResult.emergingPatterns) ? aiResult.emergingPatterns.slice(0, 4) : DEMO_SITREP.emergingPatterns,
+      recommendations: Array.isArray(aiResult.recommendations) ? aiResult.recommendations.slice(0, 4) : DEMO_SITREP.recommendations,
+      dataSnapshot: {
+        criticalEvents: criticalEvents.length,
+        highEvents: highEvents.length,
+        totalEvents: allEvents.length,
+        militaryFlights: allFlights.length,
+        cyberThreats: allCyber.length,
+        breakingNews: breakingNews.length
+      },
+      analyzedAt: new Date().toISOString()
+    };
+
+    cache.set('ai_sitrep', sitrep, 15 * 60 * 1000);
+    res.json(sitrep);
+  } catch (err) {
+    console.error('[ai/sitrep] Error:', err.message);
+    res.status(500).json({ error: 'Failed to generate SITREP' });
+  }
+});
