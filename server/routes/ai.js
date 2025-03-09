@@ -656,3 +656,4 @@ Return a JSON object:
     res.status(500).json({ error: 'Failed to generate Wargame simulation' });
   }
 });
+});
