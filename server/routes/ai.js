@@ -587,3 +587,91 @@ Return a JSON object with EXACTLY these fields:
     res.status(500).json({ error: 'Failed to generate SITREP' });
   }
 });
+
+// ============================================================
+//  POST /api/ai/wargame — BRANCHING FUTURES SIMULATION
+// ============================================================
+
+router.post('/wargame', async (req, res) => {
+  try {
+    const { eventId, eventTitle, eventCountry } = req.body;
+    if (!eventTitle) return res.status(400).json({ error: 'Event Title is required for simulation' });
+
+    // Gather Live Context for this specific area
+    const ctx = gatherLiveContext(eventCountry || '');
+
+    const cryptoContext = ctx.financeOverview?.crypto
+      ? ctx.financeOverview.crypto.map(c => `${c.symbol}: $${c.price?.toLocaleString()}`).join(', ')
+      : 'No live crypto data';
+
+    const prompt = `You are VERIDIAN AI Wargaming Node. The commander has selected a critical event for simulation.
+
+EVENT: "${eventTitle}"
+LOCATION: ${eventCountry || 'Global'}
+TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+
+LIVE CONTEXT:
+  - Critical Events active locally: ${ctx.countryEvents.filter(e => e.severity==='CRITICAL').length}
+  - Local Military Flights: ${ctx.countryFlights.length}
+  - Global Financial State: ${cryptoContext}
+
+=== YOUR TASK ===
+Run a predictive scenario simulation. Extrapolate 3 distinct, diverging timelines (Path A, Path B, Path C) extending 30-90 days into the future. Each path MUST represent a fundamentally different outcome (e.g., De-escalation vs Kinetic Escalation vs Diplomatic Stalemate).
+
+Return a JSON object:
+{
+  "scenarioName": "Short dramatic title for this simulation",
+  "baseAssessment": "2-3 sentence assessment of the current state of this event",
+  "timelines": [
+    {
+      "path": "Path A: De-escalation",
+      "probability": <0-100%, total of 3 paths should roughly equal 100>,
+      "description": "Detailed description of how this future plays out",
+      "geopoliticalImpact": "How this affects regional stability",
+      "marketImpact": "Specific impact on oil, gold, tech, defense stocks",
+      "keyTrigger": "The specific event that would confirm we are on this path"
+    },
+    ... (Path B),
+    ... (Path C)
+  ]
+}`;
+
+    const aiResult = await generateAI(prompt);
+
+    if (!aiResult || !aiResult.timelines) {
+      return res.json({
+        scenarioName: `SIMULATION: ${eventTitle.substring(0, 30)}...`,
+        baseAssessment: "Simulation core offline. Awaiting secure uplink to predictive nodes.",
+        timelines: [
+          { path: "Path A: De-escalation", probability: 40, description: "Diplomatic channels successfully mediate the conflict.", geopoliticalImpact: "Regional stability improves.", marketImpact: "Safe havens retract, broad equities rally.", keyTrigger: "Ceasefire signed." },
+          { path: "Path B: Kinetic Escalation", probability: 35, description: "Conflict expands to neighboring territories.", geopoliticalImpact: "Border closures and military mobilization.", marketImpact: "Defense and oil surge.", keyTrigger: "Cross-border strike." },
+          { path: "Path C: Stalemate", probability: 25, description: "Conflict freezes along current lines.", geopoliticalImpact: "Long-term sanctions implemented.", marketImpact: "Supply chains permanently reroute, inflation persists.", keyTrigger: "Failed UN resolution." }
+        ]
+      });
+    }
+
+    res.json(aiResult);
+  } catch (err) {
+    console.error('[ai/wargame] Error:', err.message);
+    res.status(500).json({ error: 'Failed to generate Wargame simulation' });
+  }
+});
+
+// ============================================================
+//  POST /api/ai/chat — OMNICOMMAND CONVERSATIONAL AI
+// ============================================================
+
+router.post('/chat', async (req, res) => {
+  try {
+    const { messages, activeCountry } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    const ctx = gatherLiveContext(activeCountry || '');
+
+    const eventSummary = ctx.countryEvents.length > 0
+      ? ctx.countryEvents.slice(0, 10).map(e => `[${e.severity}] ${e.title}`).join('\n  ')
+      : 'No critical events in immediate focus.';
+
+    const globalTensionEvents = ctx.allEvents.filter(e => e.severity === 'CRITICAL').length;
