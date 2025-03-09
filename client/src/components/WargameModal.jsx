@@ -90,3 +90,44 @@ export default function WargameModal({ event, onClose }) {
                         <span className="font-heading font-bold text-[11px] uppercase tracking-wider text-white">{timeline.path}</span>
                         <span className="font-mono text-lg font-bold" style={{ color }}>{timeline.probability}%</span>
                       </div>
+                      {/* Body */}
+                      <div className="p-4 flex-1 space-y-4">
+                        <p className="text-[11px] text-white/50 leading-relaxed font-medium">{timeline.description}</p>
+                        
+                        <div>
+                          <div className="text-[8px] uppercase tracking-widest text-white/30 mb-1">Geopolitical Impact</div>
+                          <div className="text-[10px] text-white/70 pl-2 border-l border-white/10">{timeline.geopoliticalImpact}</div>
+                        </div>
+
+                        <div>
+                          <div className="text-[8px] uppercase tracking-widest text-white/30 mb-1">Market Impact</div>
+                          <div className="text-[10px] text-white/70 pl-2 border-l border-white/10">{timeline.marketImpact}</div>
+                        </div>
+                      </div>
+
+                      {/* Footer Trigger */}
+                      <div className="p-3 bg-black/40 border-t border-white/5">
+                        <div className="text-[8px] text-[var(--color-cyan)] uppercase tracking-widest font-bold mb-1"><i className="fa-solid fa-crosshairs mr-1"></i> Key Trigger Indicator</div>
+                        <div className="text-[10px] text-white/60">{timeline.keyTrigger}</div>
+                      </div>
+
+                      {/* Glow effect */}
+                      <div className="absolute inset-x-0 bottom-0 h-1" style={{ background: color, opacity: activeNode === idx ? 1 : 0.2 }} />
+                      
+                      {/* Active SVG Connector Highlight (pseudo-overlay) */}
+                      {activeNode === idx && (
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-1 rounded-full animate-pulse shadow-[0_0_10px_currentColor]" style={{ backgroundColor: color }}></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center p-10 h-full text-white/30">Failed to generate simulation.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
