@@ -41,3 +41,52 @@ export default function WargameModal({ event, onClose }) {
             <i className="fa-solid fa-xmark text-xl"></i>
           </button>
         </div>
+        {/* Content */}
+        <div className="flex-1 overflow-hidden relative">
+          {loading ? (
+            <TerminalLoader context={`SIMULATING FUTURE BRANCHES FOR EVENT: ${event.id}`} />
+          ) : simulation ? (
+            <div className="absolute inset-0 flex flex-col p-6 overflow-y-auto custom-scrollbar">
+              
+              {/* SVG Decision Tree Header */}
+              <div className="w-full flex flex-col items-center mb-8 relative">
+                {/* Root Node */}
+                <div className="bg-[#050A14] border border-[var(--color-cyan)]/50 p-4 w-3/4 md:w-1/2 text-center rounded-sm shadow-[0_0_30px_rgba(0,212,255,0.15)] relative z-10">
+                  <div className="text-[10px] text-[var(--color-cyan)] uppercase tracking-[0.2em] mb-2 font-bold flex justify-center items-center gap-2">
+                    <i className="fa-solid fa-microchip shrink-0"></i> 
+                    <span>Base Assessment // Ground Truth</span>
+                  </div>
+                  <p className="text-white/80 text-xs leading-relaxed">{simulation.baseAssessment}</p>
+                </div>
+                
+                {/* Branching SVG Lines */}
+                <svg className="w-full h-[60px] pointer-events-none -mt-1 relative z-0" preserveAspectRatio="none">
+                  {/* Left branch */}
+                  <path d="M 50% 0 Q 50% 30, 16.6% 60" stroke="var(--color-border)" strokeWidth="2" fill="none" strokeDasharray="4 4" className="animate-pulse" />
+                  {/* Center branch */}
+                  <path d="M 50% 0 L 50% 60" stroke="var(--color-border)" strokeWidth="2" fill="none" strokeDasharray="4 4" className="animate-[pulse_1.5s_ease-in-out_infinite]" />
+                  {/* Right branch */}
+                  <path d="M 50% 0 Q 50% 30, 83.3% 60" stroke="var(--color-border)" strokeWidth="2" fill="none" strokeDasharray="4 4" className="animate-[pulse_2s_ease-in-out_infinite]" />
+                </svg>
+              </div>
+
+              {/* Branching Timelines Container */}
+              <div className="flex-1 flex flex-col md:flex-row gap-6 relative z-10">
+                {simulation.timelines?.map((timeline, idx) => {
+                  const isPositive = timeline.path.toLowerCase().includes('de-escalat') || timeline.path.toLowerCase().includes('peace');
+                  const isNegative = timeline.path.toLowerCase().includes('kinetic') || timeline.path.toLowerCase().includes('escalat') || timeline.path.toLowerCase().includes('war');
+                  const color = isPositive ? 'var(--color-green)' : isNegative ? 'var(--color-red)' : 'var(--color-orange)';
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`flex-1 flex flex-col bg-[#0D1520] border-t-4 transition-all duration-300 rounded-b-sm relative overflow-hidden group cursor-pointer ${activeNode === idx ? 'scale-[1.02] shadow-2xl z-20 bg-[#121B2A]' : 'hover:bg-[#121B2A] opacity-90 z-10'}`}
+                      style={{ borderTopColor: color, borderColor: activeNode === idx ? color : 'var(--color-border)' }}
+                      onMouseEnter={() => setActiveNode(idx)}
+                      onMouseLeave={() => setActiveNode(null)}
+                    >
+                      {/* Probability Header */}
+                      <div className="p-4 flex items-center justify-between border-b border-white/5 bg-black/20">
+                        <span className="font-heading font-bold text-[11px] uppercase tracking-wider text-white">{timeline.path}</span>
+                        <span className="font-mono text-lg font-bold" style={{ color }}>{timeline.probability}%</span>
+                      </div>
