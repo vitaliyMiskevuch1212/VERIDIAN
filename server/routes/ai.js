@@ -656,3 +656,22 @@ Return a JSON object:
     res.status(500).json({ error: 'Failed to generate Wargame simulation' });
   }
 });
+
+// ============================================================
+//  POST /api/ai/chat — OMNICOMMAND CONVERSATIONAL AI
+// ============================================================
+
+router.post('/chat', async (req, res) => {
+  try {
+    const { messages, activeCountry } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    const ctx = gatherLiveContext(activeCountry || '');
+
+    const eventSummary = ctx.countryEvents.length > 0
+      ? ctx.countryEvents.slice(0, 10).map(e => `[${e.severity}] ${e.title}`).join('\n  ')
+      : 'No critical events in immediate focus.';
+
+    const globalTensionEvents = ctx.allEvents.filter(e => e.severity === 'CRITICAL').length;
