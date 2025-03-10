@@ -695,3 +695,79 @@ ${chatHistory}
 === YOUR TASK ===
 Respond to the last USER message as the AI assistant VERIDIAN. Ensure your response is highly concise, tactical, data-driven, and authoritative. Reference the active intelligence context where relevant. Do NOT use markdown. Reply with plain text. Keep it strictly under 3 sentences unless specifically asked for a detailed report.
 VERIDIAN:`;
+
+// Await groq completion, we request a JSON but since this is direct text, we can just extract a string.
+    // Assuming generateAI returns JSON normally in other routes, let's bypass parsing for this specific route 
+    // Wait, generateAI parses JSON. I'll ask it to return a JSON object like {"reply": "..."}
+    const jsonPrompt = prompt + `\nReturn ONLY a JSON object: {"reply": "Your response here"}`;
+
+    const aiResult = await generateAI(jsonPrompt);
+
+    if (!aiResult || !aiResult.reply) {
+      return res.json({ reply: "OmniCommand Uplink offline. Check command API key." });
+    }
+
+    res.json({ reply: aiResult.reply });
+  } catch (err) {
+    console.error('[ai/chat] Error:', err.message);
+    res.json({ reply: "Command parsing error. Interference detected on the uplink." });
+  }
+});
+
+// ============================================================
+//  GET /api/ai/tension — AI GENERATED TENSION TIMELINE
+// ============================================================
+
+router.get('/tension', async (req, res) => {
+  try {
+    const cached = cache.get('ai_tension');
+    if (cached) return res.json(cached);
+
+    const allEvents = cache.get('events') || [];
+    const criticalEvents = allEvents.filter(e => e.severity === 'CRITICAL').length;
+    const highEvents = allEvents.filter(e => e.severity === 'HIGH').length;
+
+    const prompt = `You are VERIDIAN AI. The command center needs a 24-hour historical tension index chart.
+TODAY'S DATE: ${new Date().toISOString()}
+
+CURRENT LIVE CONTEXT:
+  - Critical Events active: ${criticalEvents}
+  - High-Severity Events: ${highEvents}
+  - Total tracked incidents: ${allEvents.length}
+
+=== YOUR TASK ===
+Generate a plausible sequence of 24 tension scores (0 to 100) representing the global threat level over the last 24 hours leading up to right NOW.
+- Index 0 represents 24 hours ago.
+- Index 23 represents this exact moment.
+- The final score (Index 23) MUST accurately reflect the current live context (e.g. if there are 3 Critical events, tension should be 80-100. If 0 events, tension should be 10-30).
+- Create realistic volatility across the 24 hours (e.g., sudden spikes when events began).
+
+Return ONLY a JSON object:
+{
+  "history": [24 integer values between 0 and 100]
+}`;
+
+    const aiResult = await generateAI(prompt);
+
+    if (!aiResult || !Array.isArray(aiResult.history) || aiResult.history.length === 0) {
+      // Fallback
+      const base = criticalEvents > 0 ? 70 : highEvents > 0 ? 50 : 20;
+      const history = Array.from({length: 24}, (_, i) => Math.min(100, Math.max(0, base + Math.sin(i) * 10 + Math.random() * 5)));
+      return res.json({ history });
+    }
+
+    // Ensure exactly 24 elements, capped 0-100
+    let scores = aiResult.history.map(v => Math.min(100, Math.max(0, parseInt(v) || 0)));
+    while(scores.length < 24) scores.push(scores[scores.length-1]);
+    scores = scores.slice(-24);
+
+    cache.set('ai_tension', { history: scores }, 15 * 60 * 1000); // cache for 15 mins
+    res.json({ history: scores });
+  } catch (err) {
+    console.error('[ai/tension] Error:', err.message);
+    const history = Array.from({length: 24}, () => 20);
+    res.json({ history });
+  }
+});
+
+module.exports = router;
