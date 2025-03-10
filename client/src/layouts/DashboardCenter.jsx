@@ -26,8 +26,10 @@ export default function DashboardCenter() {
     setShowRegions,
     showHeatmap,
     setShowHeatmap,
-    panelsVisible,
-    setPanelsVisible,
+    leftPanelVisible,
+    setLeftPanelVisible,
+    rightPanelVisible,
+    setRightPanelVisible,
     audio,
     filteredEvents,
     filteredFlights,
@@ -42,7 +44,7 @@ export default function DashboardCenter() {
     setScrubTime
   } = useUI();
 
-   return (
+  return (
     <div className="flex-1 relative overflow-hidden">
       {/* Filter Bar + View Controls */}
       <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
@@ -81,20 +83,29 @@ export default function DashboardCenter() {
               </button>
             </div>
 
-             {/* HIDE PANELS TOGGLE */}
+            {/* HIDE PANELS TOGGLE */}
             <button 
               onMouseEnter={audio.playHover}
-              onClick={() => { setPanelsVisible(!panelsVisible); audio.playClick(); }} 
-              className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ml-2 ${!panelsVisible ? 'text-[var(--color-gold)] bg-[var(--color-gold)]/20' : 'text-muted'}`} 
-              title={panelsVisible ? "Hide Intel Panels" : "Show Intel Panels"}
+              onClick={() => { 
+                if (leftPanelVisible || rightPanelVisible) {
+                  setLeftPanelVisible(false);
+                  setRightPanelVisible(false);
+                } else {
+                  setLeftPanelVisible(true);
+                  setRightPanelVisible(true);
+                }
+                audio.playClick(); 
+              }} 
+              className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ml-2 ${(!leftPanelVisible && !rightPanelVisible) ? 'text-[var(--color-gold)] bg-[var(--color-gold)]/20' : 'text-muted'}`} 
+              title={(leftPanelVisible || rightPanelVisible) ? "Hide Intel Panels" : "Show Intel Panels"}
             >
-              <i className={`fa-solid ${panelsVisible ? 'fa-eye-slash' : 'fa-eye'} text-[10px]`}></i>
+              <i className={`fa-solid ${(leftPanelVisible || rightPanelVisible) ? 'fa-eye-slash' : 'fa-eye'} text-[10px]`}></i>
             </button>
           </div>
         </div>
       </div>
 
-       {/* Globe / Map */}
+      {/* Globe / Map */}
       <div id="tactical-map-container" className="absolute inset-0 z-0 bg-[#060B14]">
         <ErrorBoundary name="Tactical Map">
         {viewMode === 'globe' ? (
@@ -108,7 +119,7 @@ export default function DashboardCenter() {
             onCountryClick={handleCountryClick} 
             flyToTarget={flyToTarget} 
           />
-            ) : (
+        ) : (
           <Map2D 
             events={filteredEvents} 
             flights={filteredFlights}
@@ -116,7 +127,7 @@ export default function DashboardCenter() {
             onCountryClick={handleCountryClick} 
           />
         )}
-         </ErrorBoundary>
+        </ErrorBoundary>
       </div>
 
       {/* Region Panel Overlay */}
@@ -136,11 +147,11 @@ export default function DashboardCenter() {
           activeCategory={flightCategory} 
           onCategoryChange={setFlightCategory} 
         />
-      )} 
+      )}
 
 
 
-        {/* Legend */}
+      {/* Legend */}
       <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
         <div className="bg-[#060B14]/80 backdrop-blur-xl border border-white/5 py-2 px-3 flex items-center gap-4 text-[9px] uppercase tracking-tighter font-mono rounded-sm pointer-events-auto">
           <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span><span className="text-white/60">Critical</span></div>
