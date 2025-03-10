@@ -18,7 +18,8 @@ export default function DashboardRightPanel() {
   } = useData();
   
   const { 
-    panelsVisible, 
+    rightPanelVisible, 
+    setRightPanelVisible,
     activeTab, 
     setActiveTab, 
     tabBadges, 
@@ -32,10 +33,10 @@ export default function DashboardRightPanel() {
     fetchSignal(ticker, [...eventTitles, ...newsTitles]);
   }, [fetchSignal, events, news]);
 
-  if (!panelsVisible) return null;
+  if (!rightPanelVisible) return null;
 
   return (
-    <div className="w-[340px] flex-shrink-0 bg-gradient-to-b from-[#060B14]/95 to-[#0A0F1E]/95 backdrop-blur-3xl border-l border-[var(--defcon-border,var(--color-cyan))]/20 panel-glow flex flex-col z-40 overflow-hidden animate-fade-in">
+    <div className="w-[340px] flex-shrink-0 bg-gradient-to-b from-[#060B14]/95 to-[#0A0F1E]/95 backdrop-blur-3xl border-l border-white/5 flex flex-col z-40 overflow-hidden animate-fade-in">
       {/* Tab Header */}
       <div className="flex border-b border-white/5 bg-black/20">
         {[
@@ -64,6 +65,14 @@ export default function DashboardRightPanel() {
             {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: tab.id === 'sitrep' ? 'var(--color-red)' : 'var(--color-cyan)' }}></div>}
           </button>
         ))}
+        {/* Close Button Integrated in Tabs */}
+        <button
+          onClick={() => setRightPanelVisible(false)}
+          className="px-4 py-3 text-white/20 hover:text-white transition-all cursor-pointer border-l border-white/5 bg-transparent group outline-none"
+          title="Close Panel"
+        >
+          <i className="fa-solid fa-xmark text-xs group-hover:scale-110 transition-transform"></i>
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -79,8 +88,13 @@ export default function DashboardRightPanel() {
             <div className="border-b border-white/5">
               <TopKeywords news={news} />
             </div>
-            {/* MAIN NEWS FEED */}
-            <NewsPanel news={news} loading={newsLoading} />
+            {/* MAIN NEWS FEED - REMOVED TITLE AS PER REQUEST */}
+            <NewsPanel 
+              news={news} 
+              loading={newsLoading} 
+              onClose={() => setRightPanelVisible(false)} 
+              hideTitle={true}
+            />
           </div>
         )}
         {activeTab === 'finance' && (
