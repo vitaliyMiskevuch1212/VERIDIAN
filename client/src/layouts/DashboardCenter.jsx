@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import FilterBar from '../components/FilterBar';
 import Globe from '../components/Globe';
 import Map2D from '../components/Map2D';
 import RegionPanel from '../components/RegionPanel';
 import TensionChart from '../components/TensionChart';
 import FlightConsole from '../components/FlightConsole';
+import FlightInfoPopup from '../components/FlightInfoPopup';
+import VesselConsole from '../components/VesselConsole';
+import VesselInfoPopup from '../components/VesselInfoPopup';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useData } from '../context/DataContext';
 import { useUI } from '../context/UIContext';
 
 export default function DashboardCenter() {
   const { flights, cyber, news, aiRegions } = useData();
+  const [selectedFlight, setSelectedFlight] = useState(null);
+  const [selectedVessel, setSelectedVessel] = useState(null);
   const {
     activeFilters,
     handleFilterToggle,
@@ -20,6 +25,8 @@ export default function DashboardCenter() {
     setViewMode,
     showFlights,
     setShowFlights,
+    showVessels,
+    setShowVessels,
     showCyber,
     setShowCyber,
     showRegions,
@@ -33,11 +40,14 @@ export default function DashboardCenter() {
     audio,
     filteredEvents,
     filteredFlights,
+    filteredVessels,
     handleCountryClick,
     flyToTarget,
     handleRegionClick,
     flightCategory,
     setFlightCategory,
+    vesselCategory,
+    setVesselCategory,
     minTime,
     maxTime,
     scrubTime,
@@ -71,6 +81,9 @@ export default function DashboardCenter() {
             <div className="flex items-center gap-1.5">
               <button onMouseEnter={audio.playHover} onClick={() => { setShowFlights(!showFlights); audio.playClick(); }} className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showFlights ? 'text-[var(--color-cyan)] bg-[var(--color-cyan)]/20' : 'text-muted'}`} title="Military Intelligence">
                 <i className="fa-solid fa-fighter-jet text-[10px]"></i>
+              </button>
+              <button onMouseEnter={audio.playHover} onClick={() => { setShowVessels(!showVessels); audio.playClick(); }} className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showVessels ? 'text-[#00ff7f] bg-[#00ff7f]/20' : 'text-muted'}`} title="Maritime Intelligence">
+                <i className="fa-solid fa-anchor text-[10px]"></i>
               </button>
               <button onMouseEnter={audio.playHover} onClick={() => { setShowCyber(!showCyber); audio.playClick(); }} className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showCyber ? 'text-[var(--color-purple)] bg-[var(--color-purple)]/20' : 'text-muted'}`} title="Cyber Threats">
                 <i className="fa-solid fa-shield-halved text-[10px]"></i>
@@ -112,19 +125,27 @@ export default function DashboardCenter() {
           <Globe 
             events={filteredEvents} 
             flights={filteredFlights} 
+            vessels={filteredVessels}
             cyber={cyber} 
             showFlights={showFlights} 
+            showVessels={showVessels}
             showCyber={showCyber} 
             showHeatmap={showHeatmap}
             onCountryClick={handleCountryClick} 
+            onFlightClick={setSelectedFlight}
+            onVesselClick={setSelectedVessel}
             flyToTarget={flyToTarget} 
           />
         ) : (
           <Map2D 
             events={filteredEvents} 
             flights={filteredFlights}
+            vessels={filteredVessels}
             showFlights={showFlights}
-            onCountryClick={handleCountryClick} 
+            showVessels={showVessels}
+            onCountryClick={handleCountryClick}
+            onFlightClick={setSelectedFlight}
+            onVesselClick={setSelectedVessel}
           />
         )}
         </ErrorBoundary>
@@ -143,13 +164,46 @@ export default function DashboardCenter() {
       {/* Military Flight Console */}
       {showFlights && (
         <FlightConsole 
-          flights={flights} 
+          flights={filteredFlights} 
           activeCategory={flightCategory} 
-          onCategoryChange={setFlightCategory} 
+          onCategoryChange={setFlightCategory}
+          onFlyTo={(coords) => handleCountryClick(null, coords)}
         />
       )}
 
+      {/* Maritime Vessel Console */}
+      {showVessels && (
+        <VesselConsole 
+          vessels={filteredVessels} 
+          activeCategory={vesselCategory} 
+          onCategoryChange={setVesselCategory}
+          onFlyTo={(coords) => handleCountryClick(null, coords)}
+        />
+      )}
 
+      {/* Flight Info Popup — from Globe/Map airplane icon clicks */}
+      {selectedFlight && (
+        <FlightInfoPopup
+          flight={selectedFlight}
+          onClose={() => setSelectedFlight(null)}
+          onFlyTo={(f) => {
+            handleCountryClick(null, { lat: f.lat, lng: f.lng });
+            setSelectedFlight(null);
+          }}
+        />
+      )}
+
+      {/* Vessel Info Popup — from Globe/Map vessel icon clicks */}
+      {selectedVessel && (
+        <VesselInfoPopup
+          vessel={selectedVessel}
+          onClose={() => setSelectedVessel(null)}
+          onFlyTo={(v) => {
+            handleCountryClick(null, { lat: v.lat, lng: v.lng });
+            setSelectedVessel(null);
+          }}
+        />
+      )}
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
