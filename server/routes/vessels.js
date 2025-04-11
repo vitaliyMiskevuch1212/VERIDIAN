@@ -60,3 +60,14 @@ function detectNavalSurge(vesselsArr) {
     }
   });
 }
+
+//─── Estimate Projected Destination ───────────────────────
+function estimateDestination(lat, lng, headingDeg, speedKnots) {
+  if (!headingDeg || !speedKnots || speedKnots < 0.5) return { destLat: null, destLng: null };
+  // Project 10 hours ahead
+  const distDeg = (speedKnots * 1.852 * 10) / 111;
+  return {
+    destLat: lat + Math.cos(headingDeg * Math.PI / 180) * distDeg,
+    destLng: lng + Math.sin(headingDeg * Math.PI / 180) * distDeg,
+  };
+}
