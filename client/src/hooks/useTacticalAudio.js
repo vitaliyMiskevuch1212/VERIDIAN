@@ -91,4 +91,38 @@ export default function useTacticalAudio() {
         osc.start();
         osc.stop(ctx.currentTime + 0.2);
       }, []);
+      const startAmbient = useCallback(() => {
+        if (!ctxRef.current || humOscRef.current) return;
+        const ctx = ctxRef.current;
+        
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+    
+        osc.type = 'sawtooth';
+        osc.frequency.value = 55;
+    
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 2);
+    
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+    
+        osc.start();
+        humOscRef.current = { osc, gainNode };
+      }, []);
+    
+      const stopAmbient = useCallback(() => {
+        if (!ctxRef.current || !humOscRef.current) return;
+        const { osc, gainNode } = humOscRef.current;
+        
+        gainNode.gain.linearRampToValueAtTime(0, ctxRef.current.currentTime + 1);
+        
+        setTimeout(() => {
+          osc.stop();
+          humOscRef.current = null;
+        }, 1000);
+      }, []);
+    
+      return { playHover, playClick, playBloop, startAmbient, stopAmbient };
+    }
     
