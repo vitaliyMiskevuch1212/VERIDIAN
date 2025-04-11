@@ -70,4 +70,25 @@ export default function useTacticalAudio() {
         osc.start();
         osc.stop(ctx.currentTime + 0.05);
       }, []);
+      const playBloop = useCallback(() => {
+        if (!ctxRef.current) return;
+        const ctx = ctxRef.current;
+        
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+    
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.setValueAtTime(600, ctx.currentTime + 0.05);
+        osc.frequency.setValueAtTime(800, ctx.currentTime + 0.1);
+    
+        gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+    
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+      }, []);
     
