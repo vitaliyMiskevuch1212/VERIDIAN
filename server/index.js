@@ -40,98 +40,96 @@ app.use('/api/news',    require('./routes/news'));
 app.use('/api/ai',      require('./routes/ai'));
 app.use('/api/finance', require('./routes/finance'));
 app.use('/api/flights', require('./routes/flights'));
-app.use('/api/vessels', require('./routes/vessels'));
 app.use('/api/cyber',   require('./routes/cyber'));
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ 
-  status: 'ok', 
-  uptime: process.uptime(),
-  connections: io.engine?.clientsCount || 0,
-}));
-
-// --------------- Socket.io Real-Time ---------------
-let connectedClients = 0;
-
-io.on('connection', (socket) => {
-  connectedClients++;
-  console.log(`[WS] Client connected (${connectedClients} total) — ${socket.id}`);
-  
-  // Send current state immediately on connect
-  socket.emit('server:status', {
-    connected: true,
+    status: 'ok', 
     uptime: process.uptime(),
-    clients: connectedClients,
-    serverTime: new Date().toISOString(),
-  });
-
-  // Broadcast updated client count
-  io.emit('server:clients', connectedClients);
-
-  // Client can request a data refresh
-  socket.on('client:requestRefresh', (dataType) => {
-    const data = cache.get(dataType);
-    if (data) {
-      socket.emit(`data:${dataType}`, data);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    connectedClients--;
-    console.log(`[WS] Client disconnected (${connectedClients} remaining)`);
-    io.emit('server:clients', connectedClients);
-  });
-});
-
-// --------------- Real-Time Push Cron ---------------
-// Push fresh data to all clients every 60s
-let previousEventIds = new Set();
-let previousNewsIds = new Set();
-
-async function pushLiveUpdates() {
-  try {
-    // Check for new events
-    const events = cache.get('events') || [];
-    const currentEventIds = new Set(events.map(e => e.id));
-    const newEvents = events.filter(e => !previousEventIds.has(e.id));
+    connections: io.engine?.clientsCount || 0,
+  }));
+  
+  // --------------- Socket.io Real-Time ---------------
+  let connectedClients = 0;
+  
+  io.on('connection', (socket) => {
+    connectedClients++;
+    console.log(`[WS] Client connected (${connectedClients} total) — ${socket.id}`);
     
-    if (newEvents.length > 0 && previousEventIds.size > 0) {
-      console.log(`[WS] Pushing ${newEvents.length} new events`);
-      io.emit('data:newEvents', newEvents);
-    }
-    previousEventIds = currentEventIds;
-
-    // Check for new news
-    const news = cache.get('news') || [];
-    const currentNewsIds = new Set(news.map(n => n.title));
-    const newNews = news.filter(n => !previousNewsIds.has(n.title));
-    
-    if (newNews.length > 0 && previousNewsIds.size > 0) {
-      const breakingNews = newNews.filter(n => n.isBreaking || n.severity === 'CRITICAL');
-      if (breakingNews.length > 0) {
-        console.log(`[WS] Pushing ${breakingNews.length} BREAKING items`);
-        io.emit('data:breakingNews', breakingNews);
-      }
-    }
-    previousNewsIds = currentNewsIds;
-
-    // Push server heartbeat
-    io.emit('server:heartbeat', {
+    // Send current state immediately on connect
+    socket.emit('server:status', {
+      connected: true,
       uptime: process.uptime(),
       clients: connectedClients,
       serverTime: new Date().toISOString(),
-      dataStats: {
-        events: events.length,
-        news: news.length,
-        flights: (cache.get('flights') || []).length,
+    });
+  
+    // Broadcast updated client count
+    io.emit('server:clients', connectedClients);
+  
+    // Client can request a data refresh
+    socket.on('client:requestRefresh', (dataType) => {
+      const data = cache.get(dataType);
+      if (data) {
+        socket.emit(`data:${dataType}`, data);
       }
     });
-  } catch (err) {
-    console.warn('[WS] Push update error:', err.message);
+  
+    socket.on('disconnect', () => {
+      connectedClients--;
+      console.log(`[WS] Client disconnected (${connectedClients} remaining)`);
+      io.emit('server:clients', connectedClients);
+    });
+  });
+  
+  // --------------- Real-Time Push Cron ---------------
+  // Push fresh data to all clients every 60s
+  let previousEventIds = new Set();
+  let previousNewsIds = new Set();
+  
+  async function pushLiveUpdates() {
+    try {
+      // Check for new events
+      const events = cache.get('events') || [];
+      const currentEventIds = new Set(events.map(e => e.id));
+      const newEvents = events.filter(e => !previousEventIds.has(e.id));
+      
+      if (newEvents.length > 0 && previousEventIds.size > 0) {
+        console.log(`[WS] Pushing ${newEvents.length} new events`);
+        io.emit('data:newEvents', newEvents);
+      }
+      previousEventIds = currentEventIds;
+  
+      // Check for new news
+      const news = cache.get('news') || [];
+      const currentNewsIds = new Set(news.map(n => n.title));
+      const newNews = news.filter(n => !previousNewsIds.has(n.title));
+      
+      if (newNews.length > 0 && previousNewsIds.size > 0) {
+        const breakingNews = newNews.filter(n => n.isBreaking || n.severity === 'CRITICAL');
+        if (breakingNews.length > 0) {
+          console.log(`[WS] Pushing ${breakingNews.length} BREAKING items`);
+          io.emit('data:breakingNews', breakingNews);
+        }
+      }
+      previousNewsIds = currentNewsIds;
+  
+      // Push server heartbeat
+      io.emit('server:heartbeat', {
+        uptime: process.uptime(),
+        clients: connectedClients,
+        serverTime: new Date().toISOString(),
+        dataStats: {
+          events: events.length,
+          news: news.length,
+          flights: (cache.get('flights') || []).length,
+        }
+      });
+    } catch (err) {
+      console.warn('[WS] Push update error:', err.message);
+    }
   }
-}
-
-// Run push cycle every 60 seconds
+  // Run push cycle every 60 seconds
 setInterval(pushLiveUpdates, 60000);
 
 // --------------- MongoDB ---------------
