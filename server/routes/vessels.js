@@ -71,3 +71,28 @@ function estimateDestination(lat, lng, headingDeg, speedKnots) {
     destLng: lng + Math.sin(headingDeg * Math.PI / 180) * distDeg,
   };
 }
+
+// ─── WebSocket Connection to AISstream ────────────────────
+function connectToAisStream() {
+  const AIS_API_KEY = process.env.AIS_API_KEY || 'adefc2b475ba4de591127a2d1cff2a4796a8ec30'; 
+  
+  if (!AIS_API_KEY) {
+    console.warn('[AIS] ⚠️ No AIS_API_KEY found in environment. Maritime tracking disabled.');
+    return;
+  }
+
+  console.log('[AIS] Connecting to aisstream.io...');
+  const ws = new WebSocket('wss://stream.aisstream.io/v0/stream');
+
+  ws.on('open', () => {
+    console.log('[AIS] ✅ Connected to global stream');
+
+    // Revert to APIKey - official docs require exact capitalized notation
+    const subscriptionMessage = {
+      APIKey: AIS_API_KEY,
+      BoundingBoxes: [[[-90, -180], [90, 180]]],               // Global
+      FilterMessageTypes: ['PositionReport', 'ShipStaticData'] // Get positions + real names/types
+    };
+
+    ws.send(JSON.stringify(subscriptionMessage));
+  }); 
