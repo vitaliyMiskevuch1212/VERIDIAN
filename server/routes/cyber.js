@@ -154,3 +154,28 @@ async function fetchURLhaus() {
     return [];
   }
 }
+
+// GET /api/cyber
+router.get('/', async (req, res) => {
+  try {
+    const cached = cache.get('cyber');
+    if (cached) return res.json(cached);
+
+    const [feodo, urlhaus] = await Promise.allSettled([fetchFeodoTracker(), fetchURLhaus()]);
+
+    const threats = [
+      ...(feodo.status === 'fulfilled' ? feodo.value : []),
+      ...(urlhaus.status === 'fulfilled' ? urlhaus.value : []),
+    ];
+
+    const result = threats.length > 0 ? threats : DEMO_CYBER;
+
+    cache.set('cyber', result, 10 * 60 * 1000); // 10 min cache
+    res.json(result);
+  } catch (err) {
+    console.error('[cyber] Error:', err.message);
+    res.json(DEMO_CYBER);
+  }
+});
+
+module.exports = router;
