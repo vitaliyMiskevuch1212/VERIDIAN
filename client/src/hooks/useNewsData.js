@@ -15,3 +15,11 @@ export default function useNewsData() {
       setLoading(false);
     }
   }, []);
+  useEffect(() => {
+    fetchNews();
+    const interval = setInterval(fetchNews, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchNews]);
+
+  return { news, loading, refetch: fetchNews };
+}
