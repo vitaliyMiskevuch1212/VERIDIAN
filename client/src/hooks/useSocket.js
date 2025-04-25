@@ -54,3 +54,46 @@ export default function useSocketConnection() {
 
   return { socketRef, isConnected };
 }
+import { useEffect, useState } from 'react';
+
+/**
+ * useServerStatus — Tracks server heartbeat, uptime, and client count
+ * from an existing Socket.IO connection.
+ */
+export default function useServerStatus(socketRef) {
+  const [serverClients, setServerClients] = useState(0);
+  const [serverUptime, setServerUptime] = useState(0);
+  const [lastHeartbeat, setLastHeartbeat] = useState(null);
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const handleStatus = (data) => {
+      setServerClients(data.clients || 0);
+      setServerUptime(data.uptime || 0);
+    };
+
+    const handleClients = (count) => {
+      setServerClients(count);
+    };
+
+    const handleHeartbeat = (data) => {
+      setLastHeartbeat(data);
+      setServerUptime(data.uptime || 0);
+      setServerClients(data.clients || 0);
+    };
+
+    socket.on('server:status', handleStatus);
+    socket.on('server:clients', handleClients);
+    socket.on('server:heartbeat', handleHeartbeat);
+
+    return () => {
+      socket.off('server:status', handleStatus);
+      socket.off('server:clients', handleClients);
+      socket.off('server:heartbeat', handleHeartbeat);
+    };
+  }, [socketRef]);
+
+  return { serverClients, serverUptime, lastHeartbeat };
+}
