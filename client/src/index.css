@@ -75,7 +75,6 @@ select {
   border-radius: 12px;
   box-shadow: 0 0 24px rgba(0, 212, 255, 0.06);
 }
-
 /* ========================================
    Scrollbar Styling
    ======================================== */
@@ -177,7 +176,6 @@ select {
 .glow-pulse {
   animation: glowPulse 2s ease-in-out infinite;
 }
-
 /* ========================================
    Utility Classes
    ======================================== */
@@ -273,7 +271,6 @@ select {
   animation: radarPulse 2s infinite;
   border-radius: 50%;
 }
-
 /* ========================================
    Toast Notification Animations
    ======================================== */
@@ -385,18 +382,4 @@ select {
   font-weight: 700;
   color: rgba(255, 255, 255, 0.7);
   box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-
-/* ========================================
-   Flag Icon Tooltip Animation
-   ======================================== */
-@keyframes flagTooltipIn {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
 }
