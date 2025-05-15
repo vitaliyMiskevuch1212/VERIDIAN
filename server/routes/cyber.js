@@ -122,3 +122,60 @@ async function fetchURLhaus() {
         });
       }
     }
+
+    // ✅ Geo for domains via DNS-based lookup
+    for (const entry of domainHosts.slice(0, 5)) {
+      try {
+        const geo = await axios.get(
+          `http://ip-api.com/json/${entry.host}?fields=status,country,countryCode,lat,lon`,
+          { timeout: 3000 }
+        );
+        if (geo.data?.status !== 'success') continue;
+
+        threats.push({
+          lat: geo.data.lat || 0,
+          lng: geo.data.lon || 0,
+          type: 'malware',
+          severity: entry.threat === 'malware_download' ? 'CRITICAL' : 'HIGH',
+          host: entry.host.split('.').slice(-2).join('.'), // mask subdomain
+          country: geo.data.country,
+          countryCode: geo.data.countryCode
+        });
+      } catch (e) { /* skip */ }
+    }
+
+    console.log('[cyber] URLhaus threats built:', threats.length);
+    return threats;
+
+  } catch (err) {
+    console.warn('[cyber] URLhaus fetch failed:', err.message);
+    console.warn('[cyber] URLhaus error status:', err.response?.status);
+    console.warn('[cyber] URLhaus error data:', err.response?.data);
+    return [];
+  }
+}
+
+// GET /api/cyber
+router.get('/', async (req, res) => {
+  try {
+    const cached = cache.get('cyber');
+    if (cached) return res.json(cached);
+
+    const [feodo, urlhaus] = await Promise.allSettled([fetchFeodoTracker(), fetchURLhaus()]);
+
+    const threats = [
+      ...(feodo.status === 'fulfilled' ? feodo.value : []),
+      ...(urlhaus.status === 'fulfilled' ? urlhaus.value : []),
+    ];
+
+    const result = threats.length > 0 ? threats : DEMO_CYBER;
+
+    cache.set('cyber', result, 10 * 60 * 1000); // 10 min cache
+    res.json(result);
+  } catch (err) {
+    console.error('[cyber] Error:', err.message);
+    res.json(DEMO_CYBER);
+  }
+});
+
+module.exports = router;
