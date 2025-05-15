@@ -134,3 +134,64 @@ export default function MissionMetrics({ activeCount, tensionCount }) {
     </div>
   );
 }
+import React from 'react';
+import TacticalButton from './TacticalButton';
+import SystemStatus from './SystemStatus';
+import MissionMetrics from './MissionMetrics';
+
+export default function Navbar({
+  activeCount = 0,
+  tensionCount = 0,
+  isCommsActive = false,
+  onCommsToggle,
+  onPredictionsClick,
+  isConnected = false,
+  serverClients = 0,
+}) {
+  return (
+    <nav className="relative h-16 border-b border-white/10 bg-[#051120] flex items-center justify-between px-6 z-[100]">
+
+      {/* LEFT */}
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
+          <i className="fa-solid fa-satellite-dish text-[var(--color-cyan)]"></i>
+
+          <div className="flex flex-col">
+            <span className="text-[var(--color-cyan)] font-black text-xl uppercase">
+              VERIDIAN
+            </span>
+            <span className="text-white/30 text-[8px] uppercase">
+              Geopolitical Intelligence
+            </span>
+          </div>
+        </div>
+
+        <SystemStatus isConnected={isConnected} />
+      </div>
+
+      {/* CENTER */}
+      <MissionMetrics
+        activeCount={activeCount}
+        tensionCount={tensionCount}
+      />
+
+      {/* RIGHT */}
+      <div className="flex items-center gap-3">
+        <div className="text-white/30 text-[10px]">
+          {serverClients > 0 ? serverClients : 248}+ USERS
+        </div>
+
+        <div onClick={onCommsToggle}>
+          <TacticalButton
+            label={isCommsActive ? 'Comms Active' : 'Comms Off'}
+            icon={isCommsActive ? 'fa-volume-high' : 'fa-volume-xmark'}
+          />
+        </div>
+
+        <div onClick={onPredictionsClick}>
+          <TacticalButton label="Predictions" icon="fa-bullseye-arrow" />
+        </div>
+      </div>
+    </nav>
+  );
+}
