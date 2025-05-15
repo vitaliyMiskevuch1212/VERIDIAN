@@ -7,3 +7,14 @@ import ScrambleText from './ScrambleText';
 import DroneFeed from './DroneFeed';
 import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts';
 import MarketGraph from './MarketGraph';
+function getScoreColor(score) {
+    if (score >= 75) return 'var(--color-green)';
+    if (score >= 50) return 'var(--color-yellow)';
+    if (score >= 25) return 'var(--color-orange)';
+    return 'var(--color-red)';
+  }
+  
+  const OUTLOOK_ICONS = { ... };
+  const RISK_SEVERITY_COLORS = { ... };
+  const COUNTRY_ISO2 = { ... };
+  
