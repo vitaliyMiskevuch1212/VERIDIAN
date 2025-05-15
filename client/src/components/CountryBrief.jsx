@@ -22,4 +22,9 @@ function getScoreColor(score) {
       <i className={`${icon}`} style={{ color: iconColor }}></i> {title}
     </div>
   );
+  export default function CountryBrief({ country, onClose }) {
+    const [brief, setBrief] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedStockIdx, setSelectedStockIdx] = useState(0);
+    const [activeSection, setActiveSection] = useState('overview');
   
