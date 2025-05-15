@@ -202,3 +202,49 @@ export default function CountryBrief({ country, onClose }) {
                             {risk.severity && <span className="text-[7px] font-bold ml-auto flex-shrink-0 mt-0.5" style={{ color: RISK_SEVERITY_COLORS[risk.severity] }}>{risk.severity}</span>}
                           </div>
                         );
+                    })}
+                    </div>
+
+                    {/* Assessment */}
+                    <div>
+                      <SectionHeader icon="fa-solid fa-file-lines" title="Classified Assessment" />
+                      {brief.briefText?.split('\n').filter(Boolean).map((para, i) => (
+                        <p key={i} className="font-medium text-[11px] leading-relaxed mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                          <RedactedText text={para} frequency={0.6} />
+                        </p>
+                      ))}
+                    </div>
+
+                    {/* LIVE SIMULATED OSINT DRONE FEED */}
+                    <div>
+                      <SectionHeader icon="fa-solid fa-satellite" iconColor="var(--color-green)" title="Live OSINT Telemetry" />
+                      <DroneFeed region={country} lat={brief.confidenceLevel || 40.7128} lng={brief.stabilityScore || -74.0060} />
+                    </div>
+
+                    {/* Key Actors */}
+                    {brief.keyActors?.length > 0 && (
+                      <div>
+                        <SectionHeader icon="fa-solid fa-users" iconColor="var(--color-cyan)" title="Key Actors" />
+                        {brief.keyActors.map((actor, i) => (
+                          <div key={i} className="flex items-start gap-2 text-[10px] mb-1.5 text-white/60">
+                            <i className="fa-solid fa-user-tie text-[8px] text-[var(--color-cyan)] mt-0.5"></i>
+                            <span>{actor}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Escalation / De-escalation */}
+                    {(brief.escalationFactors?.length > 0 || brief.deescalationFactors?.length > 0) && (
+                      <div className="grid grid-cols-2 gap-3">
+                        {brief.escalationFactors?.length > 0 && (
+                          <div>
+                            <SectionHeader icon="fa-solid fa-arrow-trend-up" iconColor="var(--color-red)" title="Escalation" />
+                            {brief.escalationFactors.map((f, i) => (
+                              <div key={i} className="flex items-start gap-1.5 text-[9px] mb-1.5 text-white/50">
+                                <i className="fa-solid fa-caret-up text-[var(--color-red)] mt-0.5" style={{ fontSize: 7 }}></i>
+                                <span>{f}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
