@@ -80,3 +80,84 @@ export default function OmniCommand({ isOpen, onClose, events = [], news = [], o
       setTickerPrice(null);
     }
   }, [query]);
+  // Compute search results dynamically based on query
+  useEffect(() => {
+    if (!query.trim()) {
+      // Default / empty state suggestions
+      setResults([
+        { type: 'COMMAND', icon: 'fa-globe', title: 'Open Global SITREP', action: 'sitrep' },
+        { type: 'FINANCE', icon: 'fa-chart-line', title: 'Analyze Ticker: LMT', data: 'LMT', action: 'finance' },
+        { type: 'REGION', icon: 'fa-map-location-dot', title: 'Fly to Middle East', data: 'iraq', action: 'region' }
+      ]);
+      setSelectedIndex(0);
+      return;
+    }
+
+    const q = query.toLowerCase();
+    const newResults = [];
+
+    // 1. Check if looks like a Ticker symbol
+    if (q.length >= 2 && q.length <= 5 && !q.includes(' ')) {
+      const upperQ = q.toUpperCase();
+      const hasLivePrice = tickerPrice && tickerPrice.symbol === upperQ;
+      
+      newResults.push({
+        type: 'FINANCE',
+        icon: 'fa-chart-line',
+        title: hasLivePrice 
+          ? `ASSET: ${upperQ} | PRICE: $${tickerPrice.price.toLocaleString()} (${tickerPrice.change >= 0 ? '+' : ''}${tickerPrice.change.toFixed(2)}%)`
+          : `Run Financial Analysis on ${upperQ}`,
+        data: upperQ,
+        action: 'finance',
+        isLive: hasLivePrice
+      });
+    }
+
+    // 2. Search Countries (Unified: Events + GeoData)
+    const eventCountries = events.filter(e => e.country).map(e => e.country);
+    const allCountries = [...new Set([...eventCountries, ...Object.keys(COUNTRY_COORDS)])];
+    
+    const matchedCountries = allCountries
+      .filter(c => c.toLowerCase().includes(q))
+      .sort((a, b) => a.toLowerCase().indexOf(q) - b.toLowerCase().indexOf(q))
+      .slice(0, 5);
+
+    matchedCountries.forEach(c => {
+      newResults.push({
+        type: 'COUNTRY',
+        icon: 'fa-flag',
+        title: `View Intelligence: ${c}`,
+        data: c,
+        action: 'country',
+        coords: COUNTRY_COORDS[c]
+      });
+    });
+
+    // 3. Search Events
+    const matchedEvents = events.filter(e => e.title.toLowerCase().includes(q) || (e.description && e.description.toLowerCase().includes(q))).slice(0, 5);
+    matchedEvents.forEach(e => {
+      newResults.push({
+        type: 'EVENT',
+        icon: 'fa-crosshairs',
+        severity: e.severity,
+        title: e.title,
+        data: e,
+        action: 'event'
+      });
+    });
+
+    // 4. Search News
+    const matchedNews = news.filter(n => n.title.toLowerCase().includes(q)).slice(0, 5);
+    matchedNews.forEach(n => {
+      newResults.push({
+        type: 'INTEL',
+        icon: 'fa-newspaper',
+        title: n.title,
+        data: n,
+        action: 'intel'
+      });
+    });
+
+    setResults(newResults);
+    setSelectedIndex(0);
+  }, [query, events, news]);
