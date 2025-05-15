@@ -361,15 +361,3 @@ export default function CountryBrief({ country, onClose }) {
                 </div>
               )}
             </div>
-
-            {brief.demo && (
-              <div className="text-xs text-muted text-center py-2 px-3 rounded-lg" style={{ background: 'var(--color-surface)' }}>
-                <i className="fa-solid fa-info-circle"></i> Demo mode — connect API keys for live AI intel
-              </div>
-            )}
-          </>
-        ) : null}
-      </div>
-    </div>
-  );
-}
