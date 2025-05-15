@@ -311,3 +311,53 @@ export default function CountryBrief({ country, onClose }) {
                     )}
                   </>
                 )}
+
+                 {/* DIPLOMATIC TAB */}
+                 {activeSection === 'diplomatic' && (
+                  <>
+                    {brief.diplomaticStatus && (
+                      <div>
+                        <SectionHeader icon="fa-solid fa-handshake" iconColor="var(--color-cyan)" title="Diplomatic Status" />
+                        <p className="text-[11px] text-white/60 leading-relaxed">{brief.diplomaticStatus}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Sources */}
+                {brief.sourceHeadlines?.length > 0 && (
+                  <div>
+                    <SectionHeader icon="fa-solid fa-newspaper" title="Source Headlines" />
+                    {brief.sourceHeadlines.map((h, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[10px] py-1" style={{ color: 'var(--color-text-muted)' }}>
+                        <i className="fa-solid fa-link mt-0.5" style={{ fontSize: 8 }}></i>
+                        <span>{h}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Asset Charting */}
+              {hasAssets && (
+                <div className="flex-1 flex flex-col pl-6 pr-2 h-full gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="text-xs text-muted uppercase tracking-wider mr-2"><i className="fa-solid fa-shapes"></i> Selected Asset</div>
+                    <div className="flex p-1 rounded-lg" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                      {brief.topStocks.map((stock, idx) => (
+                        <button key={idx} onClick={() => setSelectedStockIdx(idx)}
+                          className="px-4 py-1.5 rounded-md text-xs font-mono-num font-bold transition-colors cursor-pointer"
+                          style={{
+                            background: selectedStockIdx === idx ? 'rgba(0,212,255,0.1)' : 'transparent',
+                            color: selectedStockIdx === idx ? 'var(--color-cyan)' : 'var(--color-text-muted)',
+                            border: selectedStockIdx === idx ? '1px solid rgba(0,212,255,0.3)' : '1px solid transparent'
+                          }}>{stock.ticker}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex-1 w-full relative">
+                    <MarketGraph stock={brief.topStocks[selectedStockIdx]} stabilityScore={brief.stabilityScore} />
+                  </div>
+                </div>
+              )}
+            </div>
