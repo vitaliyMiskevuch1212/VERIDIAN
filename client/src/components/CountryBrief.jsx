@@ -51,3 +51,52 @@ export default function CountryBrief({ country, onClose }) {
   const [loading, setLoading] = useState(true);
   const [selectedStockIdx, setSelectedStockIdx] = useState(0);
   const [activeSection, setActiveSection] = useState('overview');
+
+  useEffect(() => {
+    if (!country) return;
+    setLoading(true);
+    setBrief(null);
+    setSelectedStockIdx(0);
+    setActiveSection('overview');
+
+    axios.post('/api/ai/brief', { country, headlines: [] })
+      .then(res => setBrief(res.data))
+      .catch(err => {
+        console.warn('Brief fetch failed:', err.message);
+        setBrief({
+          countryName: country,
+          briefText: 'Intelligence assessment unavailable. Connect API keys for live AI analysis.',
+          stabilityScore: 50,
+          topRisks: [{ risk: 'Data unavailable', severity: 'LOW' }],
+          outlook: 'Stable',
+          keyActors: [], escalationFactors: [], deescalationFactors: [],
+          economicImpact: '', militaryPosture: '', diplomaticStatus: '', humanitarianConcerns: '',
+          sourceHeadlines: [], topStocks: [], affectedSectors: [],
+          historicalParallel: '', confidenceLevel: 0,
+          demo: true
+        });
+      })
+      .finally(() => setLoading(false));
+  }, [country]);
+
+  if (!country) return null;
+
+  const iso2 = COUNTRY_ISO2[country] || '';
+  const scoreData = brief ? [{ value: brief.stabilityScore, fill: getScoreColor(brief.stabilityScore) }] : [];
+
+  const handleCopy = () => {
+    const text = brief
+      ? `VERIDIAN Intel Brief: ${country}\nStability: ${brief.stabilityScore}/100\nOutlook: ${brief.outlook}\nConfidence: ${brief.confidenceLevel}%\n\n${brief.briefText}`
+      : '';
+    navigator.clipboard.writeText(text);
+  };
+
+  const hasAssets = brief?.topStocks && brief.topStocks.length > 0;
+  const panelWidth = hasAssets ? 900 : 420;
+
+  const SECTIONS = [
+    { id: 'overview', label: 'Overview', icon: 'fa-eye' },
+    { id: 'military', label: 'Military', icon: 'fa-jet-fighter' },
+    { id: 'economic', label: 'Economic', icon: 'fa-chart-line' },
+    { id: 'diplomatic', label: 'Diplomatic', icon: 'fa-handshake' },
+  ];
