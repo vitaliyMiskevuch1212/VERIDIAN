@@ -19,7 +19,7 @@ export default function DashboardOverlays({ isInitialLoad, setIsInitialLoad }) {
     setActiveTab
   } = useUI();
 
-   const handleFinanceSearch = useCallback((ticker) => fetchQuote(ticker), [fetchQuote]);
+  const handleFinanceSearch = useCallback((ticker) => fetchQuote(ticker), [fetchQuote]);
 
   return (
     <>
