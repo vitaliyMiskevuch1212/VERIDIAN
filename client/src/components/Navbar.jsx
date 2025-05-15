@@ -69,3 +69,68 @@ export default function SystemStatus({ isConnected }) {
     </div>
   );
 }
+import React from 'react';
+
+export default function MissionMetrics({ activeCount, tensionCount }) {
+  return (
+    <div className="absolute left-1/2 -translate-x-1/2 flex items-center h-full">
+      <div className="flex items-center gap-16 px-12 border-x border-white/5 h-2/3">
+
+        {/* ACTIVE */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-mono-num font-black text-[var(--color-red)]">
+              {activeCount}
+            </span>
+
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-1.5 h-4 rounded-sm ${
+                    i < activeCount
+                      ? 'bg-[var(--color-red)]'
+                      : 'bg-white/5'
+                  }`}
+                ></div>
+              ))}
+            </div>
+          </div>
+
+          <span className="text-[8px] text-white/30 uppercase">
+            Active Status
+          </span>
+        </div>
+
+        <div className="w-[1px] h-8 bg-white/10"></div>
+
+        {/* TENSION */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-1.5 h-4 rounded-sm ${
+                    i < tensionCount
+                      ? 'bg-[var(--color-gold)]'
+                      : 'bg-white/5'
+                  }`}
+                ></div>
+              ))}
+            </div>
+
+            <span className="text-2xl font-mono-num font-black text-[var(--color-gold)]">
+              {tensionCount}
+            </span>
+          </div>
+
+          <span className="text-[8px] text-white/30 uppercase">
+            Intelligence Tensions
+          </span>
+        </div>
+
+      </div>
+    </div>
+  );
+}
