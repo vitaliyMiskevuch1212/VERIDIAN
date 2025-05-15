@@ -100,3 +100,58 @@ export default function CountryBrief({ country, onClose }) {
     { id: 'economic', label: 'Economic', icon: 'fa-chart-line' },
     { id: 'diplomatic', label: 'Diplomatic', icon: 'fa-handshake' },
   ];
+
+  return (
+    <div
+      className="slide-in-right panel absolute right-0 top-0 bottom-0 z-40 flex flex-col shadow-2xl"
+      style={{ width: panelWidth, maxWidth: '95vw', overflow: 'hidden', background: 'rgba(10, 15, 25, 0.95)', backdropFilter: 'blur(20px)' }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 bg-black/40 z-10 relative" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        <div className="flex items-center gap-3">
+          <FlagIcon iso2={iso2} size={40} />
+          <div>
+            <h2 className="text-white text-lg font-heading uppercase tracking-widest font-bold">
+              <ScrambleText text={country} duration={800} />
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="px-1.5 py-0.5 border border-white/20 bg-white/5 rounded text-[8px] font-mono text-white/50">GEO-NODE</span>
+              <ScrambleText text={`ID: ${country.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 9000) + 1000}`} className="text-[10px] text-white/40 font-mono tracking-widest" duration={1200} />
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {brief?.liveDataSources && (
+            <div className="flex items-center gap-1.5 text-[8px] font-mono text-white/20 mr-2">
+              <span>{brief.liveDataSources.eventsCount}E</span>
+              <span>{brief.liveDataSources.newsCount}N</span>
+              <span>{brief.liveDataSources.flightsCount}F</span>
+              <span>{brief.liveDataSources.cyberCount}C</span>
+            </div>
+          )}
+          <button onClick={handleCopy} className="p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer" style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)' }}>
+            <i className="fa-solid fa-copy"></i>
+          </button>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer" style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)' }}>
+            <i className="fa-solid fa-xmark" style={{ fontSize: 18 }}></i>
+          </button>
+        </div>
+      </div>
+
+      {/* Section Tabs */}
+      {!loading && brief && (
+        <div className="flex border-b border-white/5 bg-black/20 px-2">
+          {SECTIONS.map(s => (
+            <button key={s.id} onClick={() => setActiveSection(s.id)}
+              className="px-3 py-2 text-[8px] font-bold uppercase tracking-[0.15em] flex items-center gap-1.5 border-none transition-all cursor-pointer outline-none relative"
+              style={{
+                background: activeSection === s.id ? 'rgba(0,212,255,0.08)' : 'transparent',
+                color: activeSection === s.id ? 'var(--color-cyan)' : 'var(--color-text-muted)',
+              }}>
+              <i className={`fa-solid ${s.icon} text-[8px]`}></i>
+              {s.label}
+              {activeSection === s.id && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--color-cyan)]"></div>}
+            </button>
+          ))}
+        </div>
+      )}
