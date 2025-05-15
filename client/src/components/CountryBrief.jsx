@@ -17,4 +17,9 @@ function getScoreColor(score) {
   const OUTLOOK_ICONS = { ... };
   const RISK_SEVERITY_COLORS = { ... };
   const COUNTRY_ISO2 = { ... };
+  const SectionHeader = ({ icon, iconColor, title }) => (
+    <div className="text-[9px] ...">
+      <i className={`${icon}`} style={{ color: iconColor }}></i> {title}
+    </div>
+  );
   
