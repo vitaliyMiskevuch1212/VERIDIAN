@@ -47,3 +47,19 @@ export default function GlobalRiskIndex({ context }) {
     </div>
   );
 }
+
+function RiskStat({ label, val, max, color }) {
+  const percent = Math.min(100, (val / max) * 100);
+  return (
+    <div className="bg-white/5 p-2 rounded-sm border border-white/5">
+      <div className="text-[7px] text-white/40 uppercase tracking-widest mb-1.5">{label}</div>
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="text-[11px] font-mono-num font-bold text-white">{val}</span>
+        <span className="text-[7px] text-white/20">TARGET: {max}</span>
+      </div>
+      <div className="h-0.5 w-full bg-white/5 rounded-full overflow-hidden">
+        <div className="h-full transition-all duration-1000" style={{ width: `${percent}%`, backgroundColor: color, boxShadow: `0 0 5px ${color}` }}></div>
+      </div>
+    </div>
+  );
+}
