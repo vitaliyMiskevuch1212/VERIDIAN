@@ -37,3 +37,46 @@ export default function OmniCommand({ isOpen, onClose, events = [], news = [], o
     setQuery('');
     onClose();
   };
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : prev));
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+      }
+      if (e.key === 'Enter' && results.length > 0) {
+        handleSelect(results[selectedIndex]);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, results, selectedIndex, onClose]);
+
+  // Live Finance Fetcher
+  useEffect(() => {
+    const q = query.trim().toUpperCase();
+    if (q.length >= 2 && q.length <= 5 && !q.includes(' ')) {
+      const controller = new AbortController();
+      const timer = setTimeout(async () => {
+        try {
+          const res = await axios.get(`/api/finance/${q}`, { signal: controller.signal });
+          if (res.data && res.data.price) {
+            setTickerPrice({ symbol: q, price: res.data.price, change: res.data.change });
+          }
+        } catch (e) {
+          if (e.name !== 'AbortError') setTickerPrice(null);
+        }
+      }, 300);
+      return () => {
+        clearTimeout(timer);
+        controller.abort();
+      };
+    } else {
+      setTickerPrice(null);
+    }
+  }, [query]);
