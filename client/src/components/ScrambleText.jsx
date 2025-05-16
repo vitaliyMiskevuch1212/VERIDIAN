@@ -25,38 +25,3 @@ export default function ScrambleText({ text, duration = 1500, className = '' }) 
       }
       return str;
     };
-    const animate = (timestamp) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = timestamp - startTimestamp;
-      const progressRatio = Math.min(progress / duration, 1);
-      
-      // Calculate how many characters are "solved"
-      const solvedCount = Math.floor(finalLength * progressRatio);
-      
-      if (solvedCount === finalLength) {
-        setDisplayText(text);
-        return;
-      }
-      
-      const solvedPart = text.substring(0, solvedCount);
-      const remainingLength = finalLength - solvedCount;
-      const scrambledPart = getRandomString(remainingLength);
-      
-      setDisplayText(solvedPart + scrambledPart);
-      
-      frameId = requestAnimationFrame(animate);
-    };
-
-    // Give it a tiny delay to ensure mount is complete before scramble starts
-    const timeoutId = setTimeout(() => {
-      frameId = requestAnimationFrame(animate);
-    }, 100);
-
-    return () => {
-      cancelAnimationFrame(frameId);
-      clearTimeout(timeoutId);
-    };
-  }, [text, duration]);
-
-  return <span className={className}>{displayText || '...'}</span>;
-}
