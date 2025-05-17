@@ -39,4 +39,50 @@ export default function FlightConsole({ flights = [], activeCategory, onCategory
           boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
           minWidth: isExpanded ? 560 : 200
         }}
-      ></div>
+      >
+        {/* Header */}
+        <div 
+          className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-white/5 transition-colors"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <div className="flex items-center gap-3">
+            <i className="fa-solid fa-jet-fighter text-[var(--color-cyan)] text-xs"></i>
+            <span className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Military Aircraft</span>
+            <span className="text-[var(--color-cyan)] font-mono text-xs font-bold">{flights.length}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-white/30 text-[8px] font-mono uppercase">OpenSky Network</span>
+            <i className={`fa-solid fa-chevron-${isExpanded ? 'down' : 'up'} text-white/30 text-[10px] transition-transform`}></i>
+          </div>
+        </div>
+
+        {/* Category Pills */}
+        {isExpanded && (
+          <div className="px-3 pb-3 pt-1 flex items-center gap-2 border-t border-white/5">
+            {CATEGORIES.map(cat => {
+              const isActive = activeCategory === cat.id;
+              const count = categoryCounts[cat.id] || 0;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => onCategoryChange(cat.id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all border ${
+                    isActive 
+                      ? 'border-white/20 bg-white/10 text-white' 
+                      : 'border-white/5 bg-white/[0.02] text-white/40 hover:text-white/70 hover:bg-white/5'
+                  }`}
+                >
+                  <i className={`fa-solid ${cat.icon}`} style={{ color: isActive ? cat.color : undefined, fontSize: 9 }}></i>
+                  <span>{cat.label}</span>
+                  <span className="font-mono" style={{ color: isActive ? cat.color : 'inherit' }}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export { mapToCategory };
