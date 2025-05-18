@@ -1,8 +1,33 @@
+/**
+ * @file events.js
+ * @route GET /api/events
+ * @description Aggregates real-time geopolitical, conflict, and natural disaster events
+ *              from multiple live data sources (USGS, NASA EONET). Falls back to a
+ *              curated demo dataset when live sources return insufficient data.
+ *              Results are cached for 15 minutes to reduce upstream API load.
+ */
+
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const cache = require('../services/cacheService');
 
+/**
+ * Fallback demo dataset used when live APIs return fewer than 6 events.
+ * Each entry represents a globally significant geopolitical or natural event
+ * with coordinates, severity classification, and event type metadata.
+ *
+ * @type {Array<{
+ *   id: string,
+ *   title: string,
+ *   lat: number,
+ *   lng: number,
+ *   severity: 'CRITICAL'|'HIGH'|'MEDIUM'|'LOW',
+ *   type: string,
+ *   country: string,
+ *   iso2: string
+ * }>}
+ */
 const DEMO_EVENTS = [
   { id: 'd1',  title: 'Military escalation near border region',      lat: 34.05,  lng: 44.36,   severity: 'CRITICAL', type: 'conflict',     country: 'Iraq',        iso2: 'iq' },
   { id: 'd2',  title: 'Anti-government protests in capital',         lat: 33.89,  lng: 35.50,   severity: 'HIGH',     type: 'protest',      country: 'Lebanon',     iso2: 'lb' },
@@ -31,34 +56,50 @@ const DEMO_EVENTS = [
   { id: 'd25', title: 'Typhoon warning issued for coastal regions', lat: 14.60,  lng: 120.98,  severity: 'HIGH',     type: 'disaster',     country: 'Philippines', iso2: 'ph' },
 ];
 
+/**
+ * Derives a severity level from raw event text using keyword heuristics.
+ * Matches the most dangerous keywords first (CRITICAL → HIGH → MEDIUM → LOW).
+ *
+ * @param {string} text - Event title or description to evaluate.
+ * @returns {'CRITICAL'|'HIGH'|'MEDIUM'|'LOW'} Computed severity level.
+ */
 function scoreSeverity(text) {
   const t = (text || '').toLowerCase();
   if (/killed|bombing|attack|explosion|war|missiles|airstrike|massacre/.test(t)) return 'CRITICAL';
-  if (/military|armed|troops|clash|strike|gunfire|hostage/.test(t)) return 'HIGH';
-  if (/protest|tension|sanctions|arrest|unrest/.test(t)) return 'MEDIUM';
+  if (/military|armed|troops|clash|strike|gunfire|hostage/.test(t))              return 'HIGH';
+  if (/protest|tension|sanctions|arrest|unrest/.test(t))                         return 'MEDIUM';
   return 'LOW';
 }
 
+/**
+ * Classifies an event into a predefined category based on keyword matching.
+ * Categories are checked in priority order: natural disasters first, then
+ * human-caused events, with 'political' as the catch-all fallback.
+ *
+ * @param {string} text - Event title or description to classify.
+ * @returns {'earthquake'|'wildfire'|'disaster'|'protest'|'cyber'|'conflict'|'political'} Event category.
+ */
 function classifyEvent(text) {
   const t = (text || '').toLowerCase();
-  if (/earthquake|quake|seismic/.test(t)) return 'earthquake';
-  if (/wildfire|fire|blaze/.test(t)) return 'wildfire';
-  if (/flood|tsunami|hurricane|typhoon|cyclone|storm|volcano/.test(t)) return 'disaster';
-  if (/protest|demonstrat|rally|march/.test(t)) return 'protest';
-  if (/cyber|hack|ransomware|breach/.test(t)) return 'cyber';
+  if (/earthquake|quake|seismic/.test(t))                                         return 'earthquake';
+  if (/wildfire|fire|blaze/.test(t))                                              return 'wildfire';
+  if (/flood|tsunami|hurricane|typhoon|cyclone|storm|volcano/.test(t))            return 'disaster';
+  if (/protest|demonstrat|rally|march/.test(t))                                   return 'protest';
+  if (/cyber|hack|ransomware|breach/.test(t))                                     return 'cyber';
   if (/conflict|battle|military|war|attack|bomb|militant|drone|airstrike/.test(t)) return 'conflict';
   return 'political';
 }
 
 /**
- * GDELT GeoJSON API — free, no auth, updates every 15 min
- */
-/**
- * GDELT — use TV API instead of DOC API, much faster
- */
-
-/**
- * NASA EONET — natural events (fires, storms, volcanoes)
+ * Fetches active natural disaster events from NASA's Earth Observatory
+ * Natural Event Tracker (EONET) API v3.
+ *
+ * Retrieves up to 20 open events from the past 7 days, normalising each
+ * into the shared event schema. Events without geometry are discarded.
+ *
+ * @async
+ * @returns {Promise<Array>} Normalised array of natural event objects,
+ *                           or an empty array if the request fails.
  */
 async function fetchEONET() {
   try {
@@ -73,20 +114,21 @@ async function fetchEONET() {
     return events
       .map((e, i) => {
         const geo = e.geometry?.[0];
+        // Skip events that lack coordinate data — they cannot be plotted on the map
         if (!geo?.coordinates) return null;
         return {
-          id: `eonet_${i}`,
-          title: e.title || 'Natural Event',
-          lat: geo.coordinates[1],
-          lng: geo.coordinates[0],
+          id:       `eonet_${i}`,
+          title:    e.title || 'Natural Event',
+          lat:      geo.coordinates[1],
+          lng:      geo.coordinates[0],
           severity: 'HIGH',
-          type: classifyEvent(e.title || e.categories?.[0]?.title || ''),
-          country: '',
-          iso2: '',
-          source: 'NASA EONET'
+          type:     classifyEvent(e.title || e.categories?.[0]?.title || ''),
+          country:  '',
+          iso2:     '',
+          source:   'NASA EONET'
         };
       })
-      .filter(Boolean);
+      .filter(Boolean); // Remove nulls from events with missing geometry
   } catch (err) {
     console.warn('[events] EONET fetch failed:', err.message);
     return [];
@@ -94,7 +136,17 @@ async function fetchEONET() {
 }
 
 /**
- * USGS earthquake feed — always reliable, no auth needed
+ * Fetches recent earthquakes (magnitude ≥ 2.5) from the USGS
+ * Earthquake Hazards Program GeoJSON feed.
+ *
+ * Severity is computed from magnitude:
+ *  - mag ≥ 6.0  → CRITICAL
+ *  - mag ≥ 4.5  → HIGH
+ *  - mag < 4.5  → MEDIUM
+ *
+ * @async
+ * @returns {Promise<Array>} Array of up to 20 normalised earthquake event objects,
+ *                           or an empty array if the request fails.
  */
 async function fetchUSGS() {
   try {
@@ -104,15 +156,17 @@ async function fetchUSGS() {
     );
     const features = res.data?.features || [];
     const events = features.slice(0, 20).map((f, i) => ({
-      id: `usgs_${i}`,
-      title: f.properties?.title || 'Earthquake',
-      lat: f.geometry?.coordinates?.[1] || 0,
-      lng: f.geometry?.coordinates?.[0] || 0,
-      severity: f.properties?.mag >= 6 ? 'CRITICAL' : f.properties?.mag >= 4.5 ? 'HIGH' : 'MEDIUM',
-      type: 'earthquake',
-      country: (f.properties?.place || '').split(', ').pop() || '',
-      iso2: '',
-      source: 'USGS'
+      id:       `usgs_${i}`,
+      title:    f.properties?.title || 'Earthquake',
+      lat:      f.geometry?.coordinates?.[1] || 0,
+      lng:      f.geometry?.coordinates?.[0] || 0,
+      severity: f.properties?.mag >= 6   ? 'CRITICAL'
+              : f.properties?.mag >= 4.5 ? 'HIGH'
+              : 'MEDIUM',
+      type:     'earthquake',
+      country:  (f.properties?.place || '').split(', ').pop() || '',
+      iso2:     '',
+      source:   'USGS'
     }));
     console.log(`[events] USGS returned ${events.length} earthquakes`);
     return events;
@@ -122,3 +176,52 @@ async function fetchUSGS() {
   }
 }
 
+/**
+ * GET /api/events
+ *
+ * Returns a merged list of live global events from USGS and NASA EONET.
+ * Both sources are fetched concurrently via Promise.allSettled, ensuring
+ * a partial failure in one source does not block the other.
+ *
+ * Response is cached for 15 minutes (TTL = 900,000 ms) to avoid
+ * hammering upstream APIs on every client request.
+ *
+ * Falls back to DEMO_EVENTS if live sources collectively return ≤ 5 events,
+ * guaranteeing the map is never rendered empty.
+ *
+ * @name GET /api/events
+ * @returns {200} JSON array of event objects
+ * @returns {200} Falls back to DEMO_EVENTS on any unhandled error — never 500s
+ */
+router.get('/', async (req, res) => {
+  try {
+    // Serve from cache if a recent fetch is available
+    const cached = cache.get('events');
+    if (cached) return res.json(cached);
+
+    // Fetch both sources concurrently; allSettled prevents one failure from
+    // blocking the other — each result is checked individually below
+    const [usgs, eonet] = await Promise.allSettled([
+      fetchUSGS(),
+      fetchEONET()
+    ]);
+
+    const events = [
+      ...(usgs.status  === 'fulfilled' ? usgs.value  : []),
+      ...(eonet.status === 'fulfilled' ? eonet.value : []),
+    ];
+
+    console.log(`[events] Total live events: ${events.length}`);
+
+    // Fall back to demo data if live APIs returned too few events to be useful
+    const result = events.length > 5 ? events : DEMO_EVENTS;
+    cache.set('events', result, 15 * 60 * 1000); // Cache TTL: 15 minutes
+    res.json(result);
+  } catch (err) {
+    // Last-resort fallback: always return something renderable, never a 500
+    console.error('[events] Error:', err.message);
+    res.json(DEMO_EVENTS);
+  }
+});
+
+module.exports = router;
