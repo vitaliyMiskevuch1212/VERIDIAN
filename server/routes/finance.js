@@ -92,3 +92,28 @@ router.get('/', async (req, res) => {
     res.json({ crypto: DEMO_CRYPTO, forex: DEMO_FOREX, commodities: DEMO_COMMODITIES, fearGreed: { value: 45, label: 'Fear' } });
   }
 });
+
+// GET /api/finance/predictions
+router.get('/predictions', async (req, res) => {
+  try {
+    const cached = cache.get('finance_predictions');
+    if (cached) return res.json(cached);
+
+    const news = cache.get('news') || [];
+    const events = cache.get('events') || [];
+    const flights = cache.get('flights') || [];
+    const cyber = cache.get('cyber') || [];
+    const financeOverview = cache.get('finance_overview') || {};
+
+    const titles = news.slice(0, 15).map(n => n.title);
+    const criticalEvents = events.filter(e => e.severity === 'CRITICAL').map(e => `[${e.country || 'Unknown'}] ${e.title}`);
+    const highEvents = events.filter(e => e.severity === 'HIGH').map(e => e.title).slice(0, 5);
+
+    const cryptoContext = financeOverview?.crypto
+      ? financeOverview.crypto.map(c => `${c.symbol}: $${c.price?.toLocaleString()} (${c.change >= 0 ? '+' : ''}${c.change?.toFixed(2)}%)`).join(', ')
+      : '';
+    const fearGreed = financeOverview?.fearGreed
+      ? `Fear & Greed: ${financeOverview.fearGreed.value} (${financeOverview.fearGreed.label})`
+      : '';
+
+    const prompt = `You are VERIDIAN Forecast AI. Generate LIVE prediction questions based on ACTUAL current events.
