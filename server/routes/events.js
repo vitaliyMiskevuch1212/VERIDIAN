@@ -92,3 +92,33 @@ async function fetchEONET() {
     return [];
   }
 }
+
+/**
+ * USGS earthquake feed — always reliable, no auth needed
+ */
+async function fetchUSGS() {
+  try {
+    const res = await axios.get(
+      'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson',
+      { timeout: 10000 }
+    );
+    const features = res.data?.features || [];
+    const events = features.slice(0, 20).map((f, i) => ({
+      id: `usgs_${i}`,
+      title: f.properties?.title || 'Earthquake',
+      lat: f.geometry?.coordinates?.[1] || 0,
+      lng: f.geometry?.coordinates?.[0] || 0,
+      severity: f.properties?.mag >= 6 ? 'CRITICAL' : f.properties?.mag >= 4.5 ? 'HIGH' : 'MEDIUM',
+      type: 'earthquake',
+      country: (f.properties?.place || '').split(', ').pop() || '',
+      iso2: '',
+      source: 'USGS'
+    }));
+    console.log(`[events] USGS returned ${events.length} earthquakes`);
+    return events;
+  } catch (err) {
+    console.warn('[events] USGS fetch failed:', err.message);
+    return [];
+  }
+}
+
