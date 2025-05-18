@@ -52,3 +52,43 @@ function generateSparkline(basePrice) {
   return data.reverse();
 }
 
+// ✅ 1. STATIC ROUTES FIRST
+
+// GET /api/finance
+router.get('/', async (req, res) => {
+  try {
+    const cached = cache.get('finance_overview');
+    if (cached) return res.json(cached);
+
+    let fearGreed = { value: 45, label: 'Fear' };
+    try {
+      const fgRes = await axios.get('https://api.alternative.me/fng/?limit=1', { timeout: 5000 });
+      const fgData = fgRes.data?.data?.[0];
+      if (fgData) fearGreed = { value: parseInt(fgData.value), label: fgData.value_classification };
+    } catch (e) { /* use default */ }
+
+    let crypto = DEMO_CRYPTO;
+    try {
+      const cgRes = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+        params: { ids: 'bitcoin,ethereum,solana,ripple', vs_currencies: 'usd', include_24hr_change: 'true' },
+        timeout: 5000
+      });
+      const d = cgRes.data;
+      if (d.bitcoin) {
+        crypto = [
+          { symbol: 'BTC', name: 'Bitcoin',  price: d.bitcoin?.usd || 0,  change: d.bitcoin?.usd_24h_change || 0 },
+          { symbol: 'ETH', name: 'Ethereum', price: d.ethereum?.usd || 0, change: d.ethereum?.usd_24h_change || 0 },
+          { symbol: 'SOL', name: 'Solana',   price: d.solana?.usd || 0,   change: d.solana?.usd_24h_change || 0 },
+          { symbol: 'XRP', name: 'XRP',      price: d.ripple?.usd || 0,   change: d.ripple?.usd_24h_change || 0 },
+        ];
+      }
+    } catch (e) { /* use demo */ }
+
+    const result = { crypto, forex: DEMO_FOREX, commodities: DEMO_COMMODITIES, fearGreed };
+    cache.set('finance_overview', result, 3 * 60 * 1000);
+    res.json(result);
+  } catch (err) {
+    console.error('[finance] Overview error:', err.message);
+    res.json({ crypto: DEMO_CRYPTO, forex: DEMO_FOREX, commodities: DEMO_COMMODITIES, fearGreed: { value: 45, label: 'Fear' } });
+  }
+});
