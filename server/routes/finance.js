@@ -211,3 +211,35 @@ Return JSON only:
         { name: 'DAX',       code: 'EU', value: 18477, change: criticalEvents.length > 2 ? -1.05 : 0.32, isUp: criticalEvents.length <= 2 }
       ];
     }
+
+    // Keywords
+    const keywordsRaw = titles.join(' ').toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+    const stopWords = ['the', 'and', 'for', 'with', 'that', 'this', 'from', 'after', 'amid', 'over', 'says', 'said', 'new', 'been', 'more', 'into', 'about'];
+    const counts = {};
+    keywordsRaw.forEach(w => {
+      if (w.length > 3 && !stopWords.includes(w)) counts[w] = (counts[w] || 0) + 1;
+    });
+    const keywords = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count], i) => ({ rank: i + 1, name: name.charAt(0).toUpperCase() + name.slice(1), mentions: count * 5 + (titles.length - i) }));
+
+    const result = {
+      predictions, indices, keywords, marketStatus, marketReasoning,
+      dataContext: {
+        criticalEvents: criticalEvents.length,
+        totalEvents: events.length,
+        militaryFlights: flights.length,
+        cyberThreats: cyber.length
+      }
+    };
+
+    cache.set('finance_predictions', result, 10 * 60 * 1000);
+    res.json(result);
+  } catch (err) {
+    console.error('[finance] Predictions error:', err.message);
+    res.status(500).json({ error: 'Failed to generate predictions' });
+  }
+});
+
+    
