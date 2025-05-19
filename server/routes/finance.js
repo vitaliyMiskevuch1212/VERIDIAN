@@ -117,3 +117,63 @@ router.get('/predictions', async (req, res) => {
       : '';
 
     const prompt = `You are VERIDIAN Forecast AI. Generate LIVE prediction questions based on ACTUAL current events.
+
+TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+
+=== LIVE INTELLIGENCE FEEDS ===
+
+CRITICAL EVENTS (${criticalEvents.length}):
+${criticalEvents.length > 0 ? criticalEvents.map(e => `  - ${e}`).join('\n') : '  - None active'}
+
+HIGH EVENTS (${highEvents.length}):
+${highEvents.length > 0 ? highEvents.map(e => `  - ${e}`).join('\n') : '  - None active'}
+
+TOP NEWS:
+${titles.slice(0, 10).map(t => `  - ${t}`).join('\n') || '  - No headlines'}
+
+MILITARY: ${flights.length} aircraft tracked, ${flights.filter(f => f.isNearConflict).length} near conflict zones
+CYBER: ${cyber.length} threat nodes, ${cyber.filter(c => c.severity === 'CRITICAL').length} critical
+MARKETS: ${cryptoContext || 'N/A'} | ${fearGreed || 'N/A'}
+
+=== YOUR TASK ===
+Create 5 prediction questions that are DIRECTLY about the specific live events above.
+
+Return JSON only:
+{
+  "predictions": [
+    {
+      "question": "Specific prediction question referencing a live event above",
+      "category": "MIL|ECON|POL|TECH|CYBER",
+      "probability": <0-100>,
+      "sparkline": [7 integers showing probability trend over 7 days],
+      "sentiment": { "yes": <percent>, "no": <percent> },
+      "daysRemaining": <integer>,
+      "reasoning": "1 sentence explaining why"
+    }
+  ],
+  "marketStatus": "BULLISH|BEARISH",
+  "marketReasoning": "1-2 sentence explanation"
+}`;
+
+    let predictions = [];
+    let marketStatus = 'BEARISH';
+    let marketReasoning = '';
+
+    try {
+      const aiRes = await groqService.generateAI(prompt);
+      if (aiRes) {
+        predictions = Array.isArray(aiRes.predictions) ? aiRes.predictions : (Array.isArray(aiRes) ? aiRes : []);
+        marketStatus = ['BULLISH', 'BEARISH'].includes(aiRes.marketStatus) ? aiRes.marketStatus : 'BEARISH';
+        marketReasoning = aiRes.marketReasoning || '';
+      }
+    } catch (e) {
+      console.warn('[finance] Prediction AI failed, using fallback.');
+    }
+
+    if (predictions.length === 0) {
+      predictions = [
+        { question: `Will the ${criticalEvents.length} active critical events lead to broader regional escalation within 30 days?`, category: 'MIL', probability: Math.min(80, 30 + criticalEvents.length * 12), sparkline: [40,42,45,48,50,52,55], sentiment: { yes: 55, no: 45 }, daysRemaining: 30, reasoning: `Based on ${criticalEvents.length} CRITICAL events currently active.` },
+        { question: `Will global cyber threat activity (${cyber.length} nodes) trigger a coordinated government response?`, category: 'CYBER', probability: 35, sparkline: [30,32,28,35,33,35,35], sentiment: { yes: 35, no: 65 }, daysRemaining: 60, reasoning: `${cyber.length} active threat nodes tracked globally.` },
+        { question: `Will military flight activity near conflict zones indicate major deployment changes?`, category: 'MIL', probability: 42, sparkline: [38,40,42,44,43,42,42], sentiment: { yes: 42, no: 58 }, daysRemaining: 14, reasoning: `${flights.filter(f => f.isNearConflict).length} aircraft currently tracked near conflict zones.` }
+      ];
+    }
