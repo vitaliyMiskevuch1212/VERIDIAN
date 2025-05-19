@@ -242,4 +242,63 @@ Return JSON only:
   }
 });
 
-    
+// ✅ 2. DYNAMIC ROUTE LAST
+// GET /api/finance/:ticker
+router.get('/:ticker', async (req, res) => {
+  try {
+    const ticker = req.params.ticker.toUpperCase();
+    const cacheKey = `finance_${ticker}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return res.json(cached);
+
+    if (yahooFinance) {
+      try {
+        const quote = await yahooFinance.quote(ticker);
+        const now = new Date();
+        const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+        let sparkline = [];
+        try {
+          const hist = await yahooFinance.historical(ticker, {
+            period1: weekAgo.toISOString().split('T')[0],
+            period2: now.toISOString().split('T')[0],
+            interval: '1d'
+          });
+          sparkline = hist.map(h => ({ day: h.date?.toISOString()?.split('T')[0], price: h.close }));
+        } catch (e) {
+          sparkline = generateSparkline(quote?.regularMarketPrice || 100);
+        }
+
+        const result = {
+          symbol: ticker,
+          name: quote?.longName || quote?.shortName || ticker,
+          price: quote?.regularMarketPrice || 0,
+          change: quote?.regularMarketChangePercent || 0,
+          volume: quote?.regularMarketVolume ? (quote.regularMarketVolume / 1e6).toFixed(1) + 'M' : '0',
+          sparkline
+        };
+
+        cache.set(cacheKey, result);
+        return res.json(result);
+      } catch (e) {
+        console.warn(`[finance] yahoo-finance2 failed for ${ticker}:`, e.message);
+      }
+    }
+
+    const demo = DEMO_QUOTES[ticker] || {
+      symbol: ticker,
+      price: 100 + Math.random() * 200,
+      change: (Math.random() - 0.5) * 5,
+      volume: '10.0M',
+      name: ticker
+    };
+    demo.sparkline = generateSparkline(demo.price);
+    cache.set(cacheKey, demo);
+    res.json(demo);
+  } catch (err) {
+    console.error('[finance] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch finance data' });
+  }
+});
+
+module.exports = router;
