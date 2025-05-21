@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const http = require('http');
 const { Server } = require('socket.io');
 const cache = require('./services/cacheService');
+const signalEngine = require('./services/signalEngine');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -152,6 +153,10 @@ async function startServer() {
   server.listen(PORT, () => {
     console.log(`[VERIDIAN] Server running on http://localhost:${PORT}`);
     console.log(`[VERIDIAN] WebSocket ready — real-time push enabled`);
+
+    // Initialize the automatic signal engine with Socket.IO
+    signalEngine.init(io);
+    console.log(`[VERIDIAN] Signal Engine armed — auto-signal pipeline ACTIVE`);
   });
 }
 
