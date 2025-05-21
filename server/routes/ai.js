@@ -62,7 +62,7 @@ function gatherLiveContext(country) {
   const cyber = cache.get('cyber') || [];
   const financeOverview = cache.get('finance_overview') || {};
 
-  // Filter context relevant to this country
+   // Filter context relevant to this country
   const countryLower = (country || '').toLowerCase();
 
   const countryEvents = events.filter(e =>
@@ -117,7 +117,7 @@ router.post('/brief', async (req, res) => {
       } catch (e) { /* DB unavailable */ }
     }
 
-    // ---- GATHER ALL LIVE CONTEXT ----
+//---- GATHER ALL LIVE CONTEXT ----
     const ctx = gatherLiveContext(country);
 
     const eventSummary = ctx.countryEvents.length > 0
@@ -144,7 +144,7 @@ router.post('/brief', async (req, res) => {
       ? `Fear & Greed Index: ${ctx.financeOverview.fearGreed.value} (${ctx.financeOverview.fearGreed.label})`
       : '';
 
-    // ---- DEEP AI PROMPT ----
+// ---- DEEP AI PROMPT ----
     const prompt = `You are VERIDIAN AI, a senior geopolitical intelligence analyst producing a DEEP INTELLIGENCE BRIEF for ${country}.
 
 TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
@@ -233,7 +233,7 @@ Return a JSON object with EXACTLY these fields:
       analyzedAt: new Date().toISOString()
     };
 
-    // Save to MongoDB
+// Save to MongoDB
     if (BriefCache) {
       try {
         await BriefCache.findOneAndUpdate(
@@ -331,14 +331,10 @@ Return a JSON object with EXACTLY these fields:
       analyzedAt: new Date().toISOString()
     };
 
-    // Save to SignalHistory with full fields
+    // Save to SignalHistory
     if (SignalHistory) {
       try {
-        await new SignalHistory({
-          ...signal,
-          triggerType: 'manual',
-          triggerEvent: '',
-        }).save();
+        await new SignalHistory(signal).save();
       } catch (e) { /* DB save failed */ }
     }
 
@@ -346,73 +342,6 @@ Return a JSON object with EXACTLY these fields:
   } catch (err) {
     console.error('[ai/signal] Error:', err.message);
     res.json({ ticker: req.body?.ticker || 'UNKNOWN', ...DEMO_SIGNAL, demo: true });
-  }
-});
-
-// ============================================================
-//  GET /api/ai/signals/history — SIGNAL HISTORY FEED
-// ============================================================
-
-router.get('/signals/history', async (req, res) => {
-  try {
-    if (!SignalHistory) {
-      return res.json({ signals: [], total: 0, dbOffline: true });
-    }
-
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 30));
-    const skip = (page - 1) * limit;
-    const filterType = req.query.type; // BUY, SELL, HOLD
-    const filterTrigger = req.query.trigger; // manual, auto
-
-    const query = {};
-    if (['BUY', 'SELL', 'HOLD'].includes(filterType)) query.signal = filterType;
-    if (['manual', 'auto'].includes(filterTrigger)) query.triggerType = filterTrigger;
-
-    const [signals, total] = await Promise.all([
-      SignalHistory.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      SignalHistory.countDocuments(query)
-    ]);
-
-    res.json({ signals, total, page, limit });
-  } catch (err) {
-    console.error('[ai/signals/history] Error:', err.message);
-    res.json({ signals: [], total: 0, error: err.message });
-  }
-});
-
-// ============================================================
-//  GET /api/ai/signals/stats — SIGNAL AGGREGATE STATS
-// ============================================================
-
-router.get('/signals/stats', async (req, res) => {
-  try {
-    if (!SignalHistory) {
-      return res.json({ total: 0, dbOffline: true });
-    }
-
-    const [total, buyCount, sellCount, holdCount, autoCount, manualCount, avgConfidence, recentSignals] = await Promise.all([
-      SignalHistory.countDocuments(),
-      SignalHistory.countDocuments({ signal: 'BUY' }),
-      SignalHistory.countDocuments({ signal: 'SELL' }),
-      SignalHistory.countDocuments({ signal: 'HOLD' }),
-      SignalHistory.countDocuments({ triggerType: 'auto' }),
-      SignalHistory.countDocuments({ triggerType: 'manual' }),
-      SignalHistory.aggregate([{ $group: { _id: null, avg: { $avg: '$confidence' } } }]),
-      SignalHistory.find().sort({ createdAt: -1 }).limit(10).select('ticker signal confidence createdAt triggerType').lean()
-    ]);
-
-    res.json({
-      total,
-      distribution: { buy: buyCount, sell: sellCount, hold: holdCount },
-      triggerBreakdown: { auto: autoCount, manual: manualCount },
-      avgConfidence: Math.round(avgConfidence[0]?.avg || 0),
-      recentSignals,
-      retentionDays: 7,
-    });
-  } catch (err) {
-    console.error('[ai/signals/stats] Error:', err.message);
-    res.json({ total: 0, error: err.message });
   }
 });
 
@@ -436,9 +365,9 @@ router.get('/regions', async (req, res) => {
     const allEvents = cache.get('events') || [];
     const allNews = cache.get('news') || [];
     const allFlights = cache.get('flights') || [];
-    const allCyber = cache.get('cyber') || [];
+    const allCyber = cache.get('cyber') || []; 
 
-    // Build per-region context
+ // Build per-region context
     const regionContexts = REGION_DEFINITIONS.map(region => {
       const matchesRegion = (text) =>
         region.countries.some(c => (text || '').toLowerCase().includes(c));
@@ -464,8 +393,8 @@ router.get('/regions', async (req, res) => {
         topEvents: regionEvents.slice(0, 3).map(e => ({ title: e.title, severity: e.severity }))
       };
     });
-
-    // AI prompt with all region data
+  
+   // AI prompt with all region data
     const prompt = `You are VERIDIAN AI. Analyze these LIVE regional intelligence feeds and compute stability assessments.
 
 TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
@@ -515,8 +444,8 @@ Return a JSON object:
       cache.set('ai_regions', fallback, 5 * 60 * 1000);
       return res.json(fallback);
     }
-
-    // Merge AI result with static data (icons, event counts)
+  
+// Merge AI result with static data (icons, event counts)
     const result = aiResult.regions.map((r, i) => ({
       ...r,
       icon: regionContexts[i]?.icon || 'fa-globe',
@@ -658,6 +587,7 @@ Return a JSON object with EXACTLY these fields:
     res.status(500).json({ error: 'Failed to generate SITREP' });
   }
 });
+
 // ============================================================
 //  POST /api/ai/wargame — BRANCHING FUTURES SIMULATION
 // ============================================================
@@ -746,7 +676,7 @@ router.post('/chat', async (req, res) => {
 
     const globalTensionEvents = ctx.allEvents.filter(e => e.severity === 'CRITICAL').length;
 
-    // Convert message history to text
+  // Convert message history to text
     const chatHistory = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
 
     const prompt = `You are VERIDIAN OmniCommand, an advanced tactical AI assistant operating a global military/intelligence dashboard.
@@ -766,7 +696,7 @@ ${chatHistory}
 Respond to the last USER message as the AI assistant VERIDIAN. Ensure your response is highly concise, tactical, data-driven, and authoritative. Reference the active intelligence context where relevant. Do NOT use markdown. Reply with plain text. Keep it strictly under 3 sentences unless specifically asked for a detailed report.
 VERIDIAN:`;
 
-    // Await groq completion, we request a JSON but since this is direct text, we can just extract a string.
+// Await groq completion, we request a JSON but since this is direct text, we can just extract a string.
     // Assuming generateAI returns JSON normally in other routes, let's bypass parsing for this specific route 
     // Wait, generateAI parses JSON. I'll ask it to return a JSON object like {"reply": "..."}
     const jsonPrompt = prompt + `\nReturn ONLY a JSON object: {"reply": "Your response here"}`;
