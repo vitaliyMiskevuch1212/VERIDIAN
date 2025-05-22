@@ -1,0 +1,50 @@
+/* =============================================================================
+ * TICKER TRACK — Infinite horizontal scrolling ticker animation
+ * =============================================================================
+ * Powers the continuous left-to-right marquee effect used for real-time data
+ * feeds (e.g., market prices, breaking news headlines, alert banners).
+ *
+ * Architecture:
+ *   The ticker content is tripled (3x duplicated) in the DOM so that when
+ *   the track translates by -33.33% (one full copy), it seamlessly loops
+ *   back to the start without a visible jump. This avoids the need for
+ *   JavaScript-based infinite scroll or requestAnimationFrame polling.
+ *
+ * Performance:
+ *   Uses `transform: translateX()` exclusively — this stays on the GPU
+ *   compositor layer and avoids triggering layout/paint recalculations.
+ *   The 240s duration is deliberately slow for a calm, ambient ticker
+ *   suitable for dashboard contexts where readability matters.
+ * ============================================================================= */
+
+/* Container: flex row with intrinsic width (max-content) so all ticker
+   children lay out in a single unbroken horizontal line regardless of
+   viewport width. The animation runs infinitely with linear easing
+   to maintain constant scroll speed — no ease-in/out stutter. */
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-slide 240s linear infinite;
+}
+
+/* Pause on hover — allows users to read a specific ticker item without
+   chasing it. Uses animation-play-state rather than removing the animation
+   entirely, so the ticker resumes from the exact same position on mouse-out
+   instead of snapping back to the start. */
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* Keyframe: translates the track leftward by exactly one-third of its
+   total width. Since the DOM contains 3 identical copies of the ticker
+   content, sliding by -33.33% moves one full copy off-screen to the left
+   while the next identical copy slides into view — creating the illusion
+   of an infinite, seamless loop with no visible seam or reset flicker. */
+@keyframes ticker-slide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.33%);
+  }
+}
