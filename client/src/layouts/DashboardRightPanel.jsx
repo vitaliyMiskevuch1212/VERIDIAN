@@ -5,7 +5,6 @@ import NewsPanel from "../components/NewsPanel";
 import FinancePanel from "../components/FinancePanel";
 import PredictionPanel from "../components/PredictionPanel";
 import SitrepPanel from "../components/SitrepPanel";
-import SignalHistoryPanel from "../components/SignalHistoryPanel";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { useData } from "../context/DataContext";
 import { useUI } from "../context/UIContext";
@@ -24,13 +23,6 @@ export default function DashboardRightPanel() {
     sitrep,
     sitrepLoading,
     events,
-    // Signal pipeline
-    watchlist,
-    signalHistory,
-    signalStats,
-    historyLoading,
-    fetchSignalHistory,
-    fetchSignalStats,
   } = useData();
 
   const {
@@ -40,8 +32,6 @@ export default function DashboardRightPanel() {
     setActiveTab,
     tabBadges,
     setWargameEvent,
-    setUnviewedSignalCount,
-    setFullPageView,
   } = useUI();
 
   const handleFinanceSearch = useCallback(
@@ -57,23 +47,6 @@ export default function DashboardRightPanel() {
     [fetchSignal, events, news],
   );
 
-  const handleSignalRefresh = useCallback(() => {
-    fetchSignalHistory();
-    fetchSignalStats();
-  }, [fetchSignalHistory, fetchSignalStats]);
-
-  const handleSignalFilterChange = useCallback(
-    (filters) => {
-      fetchSignalHistory({ type: filters.type, trigger: filters.trigger });
-    },
-    [fetchSignalHistory],
-  );
-
-  const handleSignalsTabClick = useCallback(() => {
-    setActiveTab("signals");
-    setUnviewedSignalCount(0);
-  }, [setActiveTab, setUnviewedSignalCount]);
-
   if (!rightPanelVisible) return null;
 
   return (
@@ -85,16 +58,11 @@ export default function DashboardRightPanel() {
           { id: "finance", label: "Trade", icon: "fa-chart-line" },
           { id: "predictions", label: "Forecast", icon: "fa-crystal-ball" },
           { id: "sitrep", label: "SITREP", icon: "fa-shield-halved" },
-          { id: "signals", label: "Signals", icon: "fa-brain" },
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() =>
-              tab.id === "signals"
-                ? handleSignalsTabClick()
-                : setActiveTab(tab.id)
-            }
-            className="flex-1 py-3 text-[9px] font-heading uppercase tracking-[0.12em] flex flex-col items-center justify-center gap-1.5 border-none transition-all cursor-pointer outline-none relative group"
+            onClick={() => setActiveTab(tab.id)}
+            className="flex-1 py-3 text-[9px] font-heading uppercase tracking-[0.15em] flex flex-col items-center justify-center gap-1.5 border-none transition-all cursor-pointer outline-none relative group"
             style={{
               background:
                 activeTab === tab.id ? "rgba(0,212,255,0.08)" : "transparent",
@@ -102,9 +70,7 @@ export default function DashboardRightPanel() {
                 activeTab === tab.id
                   ? tab.id === "sitrep"
                     ? "var(--color-red)"
-                    : tab.id === "signals"
-                      ? "var(--color-cyan)"
-                      : "var(--color-cyan)"
+                    : "var(--color-cyan)"
                   : "var(--color-text-muted)",
             }}
           >
@@ -116,15 +82,13 @@ export default function DashboardRightPanel() {
             </span>
             {tabBadges[tab.id] > 0 && activeTab !== tab.id && (
               <span
-                className="absolute top-1.5 right-1 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[7px] font-bold text-white leading-none"
+                className="absolute top-1.5 right-2 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[7px] font-bold text-white leading-none"
                 style={{
                   background:
                     tab.id === "sitrep"
                       ? "var(--color-red)"
-                      : tab.id === "signals"
-                        ? "var(--color-cyan)"
-                        : "var(--color-orange)",
-                  boxShadow: `0 0 6px ${tab.id === "sitrep" ? "rgba(239,68,68,0.5)" : tab.id === "signals" ? "rgba(0,212,255,0.5)" : "rgba(249,115,22,0.5)"}`,
+                      : "var(--color-orange)",
+                  boxShadow: `0 0 6px ${tab.id === "sitrep" ? "rgba(239,68,68,0.5)" : "rgba(249,115,22,0.5)"}`,
                 }}
               >
                 {tabBadges[tab.id]}
@@ -143,18 +107,10 @@ export default function DashboardRightPanel() {
             )}
           </button>
         ))}
-        {/* Full Page Button */}
-        <button
-          onClick={() => setFullPageView(activeTab)}
-          className="px-2 py-3 text-white/20 hover:text-[var(--color-cyan)] transition-all cursor-pointer border-l border-white/5 bg-transparent group outline-none"
-          title="Open Full Page View"
-        >
-          <i className="fa-solid fa-expand text-xs group-hover:scale-110 transition-transform"></i>
-        </button>
         {/* Close Button Integrated in Tabs */}
         <button
           onClick={() => setRightPanelVisible(false)}
-          className="px-3 py-3 text-white/20 hover:text-[var(--color-red)] transition-all cursor-pointer border-l border-white/5 bg-transparent group outline-none"
+          className="px-4 py-3 text-white/20 hover:text-white transition-all cursor-pointer border-l border-white/5 bg-transparent group outline-none"
           title="Close Panel"
         >
           <i className="fa-solid fa-xmark text-xs group-hover:scale-110 transition-transform"></i>
@@ -191,7 +147,6 @@ export default function DashboardRightPanel() {
               loading={financeLoading}
               onSearch={handleFinanceSearch}
               onGetSignal={handleGetSignal}
-              watchlist={watchlist}
             />
           )}
           {activeTab === "predictions" && (
@@ -209,15 +164,6 @@ export default function DashboardRightPanel() {
           )}
           {activeTab === "sitrep" && (
             <SitrepPanel data={sitrep} loading={sitrepLoading} />
-          )}
-          {activeTab === "signals" && (
-            <SignalHistoryPanel
-              data={signalHistory}
-              stats={signalStats}
-              loading={historyLoading}
-              onRefresh={handleSignalRefresh}
-              onFilterChange={handleSignalFilterChange}
-            />
           )}
         </ErrorBoundary>
       </div>
