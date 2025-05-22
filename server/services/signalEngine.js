@@ -97,3 +97,106 @@ function init(socketIO) {
   events.forEach(e => {
     if (e.severity === 'CRITICAL') previousCriticalIds.add(e.id);
   });
+
+
+    console.log('[SignalEngine] Initialized — monitoring for CRITICAL events');
+    console.log(`[SignalEngine] Known critical IDs: ${previousCriticalIds.size}`);
+  
+    // Start the monitoring loop
+    setInterval(checkForNewCriticalEvents, CHECK_INTERVAL_MS);
+  }
+  
+  /**
+   * Core monitoring function — runs every 60 seconds
+   */
+  async function checkForNewCriticalEvents() {
+    try {
+      const now = Date.now();
+  
+      // Debounce check
+      if (now - lastRunTimestamp < DEBOUNCE_MS) return;
+  
+      // Rate limit: reset counter each hour
+      const currentHour = new Date().getHours();
+      if (currentHour !== lastBatchHour) {
+        signalBatchCount = 0;
+        lastBatchHour = currentHour;
+      }
+      if (signalBatchCount >= MAX_BATCHES_PER_HOUR) return;
+  
+      // Get current events
+      const events = cache.get('events') || [];
+      const currentCritical = events.filter(e => e.severity === 'CRITICAL');
+  
+      // Find NEW critical events
+      const newCritical = currentCritical.filter(e => !previousCriticalIds.has(e.id));
+  
+      // Update known IDs
+      currentCritical.forEach(e => previousCriticalIds.add(e.id));
+  
+      if (newCritical.length === 0) return;
+  
+      console.log(`[SignalEngine] 🚨 ${newCritical.length} NEW CRITICAL event(s) detected!`);
+      newCritical.forEach(e => console.log(`  → [${e.country || 'GLOBAL'}] ${e.title}`));
+  
+      lastRunTimestamp = now;
+      signalBatchCount++;
+  
+      // Process the new critical events
+      await generateAutoSignals(newCritical);
+  
+    } catch (err) {
+      console.error('[SignalEngine] Check error:', err.message);
+    }
+  }
+  
+  /**
+   * Generate trading signals for new CRITICAL events
+   */
+  async function generateAutoSignals(criticalEvents) {
+    try {
+      // Collect all unique tickers affected by these events
+      const tickerReasons = new Map(); // ticker -> [event titles]
+      criticalEvents.forEach(event => {
+        const tickers = getTickersForEvent(event);
+        tickers.forEach(ticker => {
+          if (!tickerReasons.has(ticker)) tickerReasons.set(ticker, []);
+          tickerReasons.get(ticker).push(event.title);
+        });
+      });
+  
+      // Take top 5 most-referenced tickers
+      const sortedTickers = [...tickerReasons.entries()]
+        .sort((a, b) => b[1].length - a[1].length)
+        .slice(0, 5);
+  
+      const tickerList = sortedTickers.map(([t]) => t);
+      const triggerEventTitle = criticalEvents[0]?.title || 'CRITICAL event detected';
+  
+      // Gather live context
+      const allEvents = cache.get('events') || [];
+      const allNews = cache.get('news') || [];
+      const financeOverview = cache.get('finance_overview') || {};
+  
+      const criticalTitles = allEvents.filter(e => e.severity === 'CRITICAL').map(e => `[${e.country || 'GLOBAL'}] ${e.title}`);
+      const topNews = allNews.slice(0, 8).map(n => `[${n.severity}] ${n.title}`);
+      const cryptoContext = financeOverview?.crypto
+        ? financeOverview.crypto.map(c => `${c.symbol}: $${c.price?.toLocaleString()} (${c.change >= 0 ? '+' : ''}${c.change?.toFixed(2)}%)`).join(', ')
+        : '';
+      const fearGreed = financeOverview?.fearGreed
+        ? `Fear & Greed: ${financeOverview.fearGreed.value} (${financeOverview.fearGreed.label})`
+        : '';
+  
+      // Batch AI prompt — generate signals for all tickers at once
+      const prompt = `You are VERIDIAN GeoTrade AI Signal Engine. A CRITICAL geopolitical event has just been detected. Generate immediate trading signals for the most affected assets.
+  
+  TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+  
+  === TRIGGER EVENT(S) ===
+  ${criticalEvents.map(e => `🚨 [${e.severity}] [${e.country || 'GLOBAL'}] ${e.title}`).join('\n')}
+  
+  === FULL INTELLIGENCE CONTEXT ===
+  
+  ACTIVE CRITICAL EVENTS (${criticalTitles.length}):
+  ${criticalTitles.map(e => `  - ${e}`).join('\n') || '  - None'}
+  
