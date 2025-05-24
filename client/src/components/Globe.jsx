@@ -194,3 +194,26 @@ export default function Globe({
       type: 'vessel'
     }));
   }, [vessels, showVessels]);
+  
+  // Signal + Satellite arcs + selected flight route
+  const arcsData = useMemo(() => {
+    const signalArcs = [];
+    
+    // Connect CRITICAL events to form a 'Global Threat Ring'
+    const criticalEvents = events.filter(e => e.severity === 'CRITICAL');
+    criticalEvents.forEach((origin, idx) => {
+      const target = criticalEvents[(idx + 1) % criticalEvents.length];
+      if (target && origin.lat !== target.lat) {
+         signalArcs.push({
+           startLat: origin.lat,
+           startLng: origin.lng,
+           endLat: target.lat,
+           endLng: target.lng,
+           color: ['rgba(239, 68, 68, 0.8)', 'rgba(239, 68, 68, 0.0)'], 
+           label: 'AI CRITICAL CORRELATION',
+           stroke: 0.2,
+           altitude: 0.3 + Math.random() * 0.15,
+           dashAnimateTime: 2500
+         });
+      }
+    });
