@@ -38,3 +38,100 @@ export default function Map2D({ events = [], flights = [], vessels = [], showFli
     if (ORANGE_ZONES.includes(name)) return "#a67120"; 
     return "#0b3421"; 
   };
+const geographies = useMemo(() => (
+    <Geographies geography={geoUrl}>
+      {({ geographies: geos }) =>
+        geos.map((geo) => (
+          <Geography
+            key={geo.rsmKey}
+            geography={geo}
+            fill={getGeographyColor(geo)}
+            stroke="rgba(0, 0, 0, 0.6)" 
+            strokeWidth={0.3}
+            onClick={() => {
+              if (onCountryClick) {
+                 const name = geo.properties.ADMIN || geo.properties.NAME;
+                 onCountryClick(name);
+              }
+            }}
+            style={{
+              default: { outline: "none" },
+              hover: { fill: "#00d4ff", opacity: 0.8, outline: "none", cursor: "pointer", transition: "all 0.2s" },
+              pressed: { outline: "none" },
+            }}
+          />
+        ))
+      }
+    </Geographies>
+  ), [onCountryClick]);
+
+  // Use useMemo to prevent unnecessary calculations on re-renders
+  const eventMarkers = useMemo(() => {
+    return events.filter(e => e.lat && e.lng).map((evt, i) => (
+      <Marker key={`evt-${i}`} coordinates={[evt.lng, evt.lat]}>
+        <circle 
+          r={evt.severity === 'CRITICAL' ? 6 : evt.severity === 'HIGH' ? 4 : 3} 
+          fill={SEVERITY_COLORS[evt.severity] || SEVERITY_COLORS.MEDIUM} 
+          className="transition-all duration-300"
+          style={{ cursor: 'pointer', filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.5))' }}
+        />
+      </Marker>
+    ));
+  }, [events]);
+
+  const flightMarkers = useMemo(() => {
+    if (!showFlights) return null;
+    return flights.map((f, i) => {
+      const color = getFlightColor(f);
+      const heading = f.heading ?? 0;
+      const glowColor = f.isSurge 
+        ? 'rgba(239,68,68,0.5)' 
+        : f.isNearConflict 
+          ? 'rgba(249,115,22,0.4)' 
+          : 'rgba(0,212,255,0.3)';
+
+      return (
+        <Marker key={`flight-${i}`} coordinates={[f.lng, f.lat]}>
+          <g 
+            transform={`rotate(${heading})`} 
+            style={{ 
+              cursor: 'pointer', 
+              filter: `drop-shadow(0 0 3px ${glowColor}) drop-shadow(0 0 6px ${glowColor})`,
+              transition: 'filter 0.2s ease'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onFlightClick) onFlightClick(f);
+            }}
+          >
+            <g transform="translate(-12, -12) scale(1)">
+              <path 
+                d={AIRPLANE_PATH} 
+                fill={color} 
+                stroke={color}
+                strokeWidth="0.3"
+                opacity="0.95"
+              />
+            </g>
+          </g>
+          {/* Callsign label */}
+          <text 
+            y={14} 
+            textAnchor="middle" 
+            style={{ 
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '6px', 
+              fontWeight: 700, 
+              fill: color, 
+              opacity: 0.7,
+              pointerEvents: 'none',
+              textShadow: '0 0 3px rgba(0,0,0,0.8)'
+            }}
+          >
+            {f.callsign}
+          </text>
+          <title>{`${f.callsign} | ${f.aircraftType || 'Tactical'} | ALT ${f.altitude}ft | ${f.velocity}kts | HDG ${heading}°`}</title>
+        </Marker>
+      );
+    });
+  }, [flights, showFlights, onFlightClick]);
