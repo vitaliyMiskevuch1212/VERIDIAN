@@ -12,7 +12,6 @@ export default function DashboardLeftPanel() {
     activeFilters,
     timeRange,
     setWargameEvent,
-    setFullPageView,
   } = useUI();
 
   if (!leftPanelVisible) return null;
@@ -26,7 +25,6 @@ export default function DashboardLeftPanel() {
           activeFilters={activeFilters}
           timeRange={timeRange}
           onSimulate={setWargameEvent}
-          onExpand={() => setFullPageView("intel")}
           onClose={() => setLeftPanelVisible(false)}
         />
       </ErrorBoundary>
