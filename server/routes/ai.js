@@ -174,7 +174,7 @@ Produce a comprehensive intelligence assessment. Cross-reference ALL the live da
 Return a JSON object with EXACTLY these fields:
 {
   "briefText": "A 4-5 paragraph DEEP intelligence assessment. Reference specific live events. Analyze cause-and-effect chains. Discuss second-order impacts. This should read like a classified briefing, not a Wikipedia summary.",
-  "stabilityScore": <number 0-100, where 100 is most stable. Compute this based on the live event severity counts, military activity, and cyber threat presence>,
+  "stabilityScore": <number 0-100, where 100 is most stable. Compute this based on BOTH the live events provided AND the real-world foundational geopolitical stability of the country (e.g. Ukraine, Russia, Iran, Palestine, Israel, Yemen should naturally start with a very low baseline in the 10-40 range due to ongoing systemic conflicts, even if no breaking events are logged today. Western nations might start 80+). Do NOT simply output 80 or 90 if there are no live events given. Apply real-world reasoning.>,
   "topRisks": [
     { "risk": "Detailed risk description referencing live data", "severity": "CRITICAL|HIGH|MEDIUM|LOW" },
     { "risk": "...", "severity": "..." },
@@ -203,7 +203,9 @@ Return a JSON object with EXACTLY these fields:
     const aiResult = await generateAI(prompt);
 
     if (!aiResult) {
-      return res.json({ countryName: country, ...DEMO_BRIEF, demo: true });
+      const baselines = { 'Iran': 35, 'Russia': 40, 'Ukraine': 30, 'Yemen': 25, 'Israel': 45, 'Palestine': 20, 'Syria': 25 };
+      const base = baselines[country] || Math.max(10, 80 - ctx.countryEvents.length * 15);
+      return res.json({ countryName: country, ...DEMO_BRIEF, stabilityScore: base, demo: true });
     }
 
     const brief = {
@@ -247,7 +249,9 @@ Return a JSON object with EXACTLY these fields:
     res.json(brief);
   } catch (err) {
     console.error('[ai/brief] Error:', err.message);
-    res.json({ countryName: req.body?.country || 'Unknown', ...DEMO_BRIEF, demo: true });
+    const baselines = { 'Iran': 35, 'Russia': 40, 'Ukraine': 30, 'Yemen': 25, 'Israel': 45, 'Palestine': 20, 'Syria': 25 };
+    const base = baselines[req.body?.country] || 62;
+    res.json({ countryName: req.body?.country || 'Unknown', ...DEMO_BRIEF, stabilityScore: base, demo: true });
   }
 });
 
@@ -430,10 +434,15 @@ const REGION_DEFINITIONS = [
 
 router.get('/regions', async (req, res) => {
   try {
-    const cached = cache.get('ai_regions');
-    if (cached) return res.json(cached);
-
     const allEvents = cache.get('events') || [];
+    const criticalCount = allEvents.filter(e => e.severity === 'CRITICAL').length;
+    const lastCriticalCount = cache.get('ai_regions_last_critical') || criticalCount;
+    const isShock = (criticalCount - lastCriticalCount) >= 2;
+    cache.set('ai_regions_last_critical', criticalCount);
+
+    const cached = cache.get('ai_regions');
+    if (cached && !isShock) return res.json(cached);
+
     const allNews = cache.get('news') || [];
     const allFlights = cache.get('flights') || [];
     const allCyber = cache.get('cyber') || [];
@@ -480,13 +489,14 @@ ${r.name.toUpperCase()}:
 
 === YOUR TASK ===
 For each region, compute a data-driven stability score and assessment. DO NOT use generic descriptions — base everything on the actual live data counts above.
+CRITICAL INSTRUCTION: Factor in REAL-WORLD BASELINE STABILITY for each region. The Middle East or Africa should NOT have a stability of 80 or 90 just because there are no live events. Their baseline is lower (e.g., 20-40 for the Middle East and Africa, 50-60 for Asia-Pacific). Adjust the score accordingly based on the provided events.
 
 Return a JSON object:
 {
   "regions": [
     {
       "name": "Middle East",
-      "stability": <0-100, computed from event severity/count>,
+      "stability": <0-100, computed from real world baseline AND event severity/count>,
       "trend": "<IMPROVING|STABLE|DETERIORATING|CRITICAL>",
       "topThreat": "The single most critical threat based on live data",
       "aiSummary": "2-sentence assessment referencing specific event counts and headlines",
@@ -500,18 +510,21 @@ Return a JSON object:
 
     if (!aiResult || !aiResult.regions) {
       // Compute fallback from raw data
-      const fallback = regionContexts.map(r => ({
-        name: r.name,
-        icon: r.icon,
-        stability: Math.max(10, 80 - (r.criticalEvents * 15) - (r.highEvents * 8) - (r.cyberThreats * 3)),
-        trend: r.criticalEvents >= 3 ? 'CRITICAL' : r.criticalEvents >= 1 ? 'DETERIORATING' : r.highEvents >= 2 ? 'DETERIORATING' : 'STABLE',
-        topThreat: r.topEvents[0]?.title || 'No critical threats detected',
-        aiSummary: `${r.totalEvents} events tracked, ${r.criticalEvents} critical. ${r.flightsNearby} military flights detected nearby.`,
-        keywords: ['monitoring', 'assessment', 'tracking'],
-        criticalEvents: r.criticalEvents,
-        totalEvents: r.totalEvents,
-        topEvents: r.topEvents
-      }));
+      const baselines = { 'Middle East': 32, 'Europe': 78, 'Asia-Pacific': 65, 'Americas': 80, 'Africa': 45 };
+      const fallback = regionContexts.map(r => {
+        const base = baselines[r.name] || 50;
+        return {
+          name: r.name,
+          icon: r.icon,
+          stability: Math.max(10, base - (r.criticalEvents * 15) - (r.highEvents * 8) - (r.cyberThreats * 3)),
+          trend: r.criticalEvents >= 3 ? 'CRITICAL' : r.criticalEvents >= 1 ? 'DETERIORATING' : r.highEvents >= 2 ? 'DETERIORATING' : 'STABLE',
+          topThreat: r.topEvents[0]?.title || 'No critical threats detected',
+          keywords: ['monitoring', 'assessment', 'tracking'],
+          criticalEvents: r.criticalEvents,
+          totalEvents: r.totalEvents,
+          topEvents: r.topEvents
+        };
+      });
       cache.set('ai_regions', fallback, 5 * 60 * 1000);
       return res.json(fallback);
     }
@@ -539,16 +552,22 @@ Return a JSON object:
 
 router.get('/sitrep', async (req, res) => {
   try {
-    const cached = cache.get('ai_sitrep');
-    if (cached) return res.json(cached);
-
     const allEvents = cache.get('events') || [];
+    const criticalEvents = allEvents.filter(e => e.severity === 'CRITICAL');
+    
+    // Shock detection to bust 15 min cache
+    const lastCriticalCount = cache.get('ai_sitrep_last_critical') || criticalEvents.length;
+    const isShock = (criticalEvents.length - lastCriticalCount) >= 2;
+    cache.set('ai_sitrep_last_critical', criticalEvents.length);
+
+    const cached = cache.get('ai_sitrep');
+    if (cached && !isShock) return res.json(cached);
+
     const allNews = cache.get('news') || [];
     const allFlights = cache.get('flights') || [];
     const allCyber = cache.get('cyber') || [];
     const financeOverview = cache.get('finance_overview') || {};
 
-    const criticalEvents = allEvents.filter(e => e.severity === 'CRITICAL');
     const highEvents = allEvents.filter(e => e.severity === 'HIGH');
     const breakingNews = allNews.filter(n => n.isBreaking);
 
@@ -602,7 +621,9 @@ Return a JSON object with EXACTLY these fields:
     { "title": "Concise threat name", "severity": "CRITICAL|HIGH", "region": "Region name", "description": "2-sentence analysis with specific references to live data" },
     ... (top 4-5 threats)
   ],
-  "escalationWatch": ["3-4 situations from live data that could escalate in the next 24-48 hours with specific reasoning"],
+  "escalationWatch": [
+    { "threat": "Description of the escalating situation", "probability": <0-100>, "timeframe": "24h | 48h | 7d", "trigger": "The exact event that would catalyst the escalation" }
+  ],
   "marketImplications": "2-3 paragraph analysis of how current geopolitical events affect global markets, citing specific events and their market impact sectors",
   "emergingPatterns": ["3-4 cross-event patterns the AI has identified, e.g. coordinated activity, cascading effects"],
   "recommendations": ["3-4 actionable intelligence recommendations for traders/analysts based on current data"]
@@ -619,7 +640,11 @@ Return a JSON object with EXACTLY these fields:
         region: e.country || 'Global',
         description: `Active critical event in ${e.country || 'undetermined region'}. Classified as ${e.type || 'multi-domain'} threat requiring continuous monitoring.`
       })),
-      escalationWatch: ['Monitor critical event corridors for secondary escalation', 'Track military flight surge patterns for deployment changes', 'Watch for cyber threat correlation with kinetic events'],
+      escalationWatch: [
+        { threat: 'Secondary escalation in conflict corridor', probability: 75, timeframe: '48h', trigger: 'Military mobilization confirming intent' },
+        { threat: 'Kinetic coordination with cyber operations', probability: 60, timeframe: '24h', trigger: 'Targeted infrastructure failure' },
+        { threat: 'Market volatility spillover to safe havens', probability: 80, timeframe: '7d', trigger: 'Sustained energy corridor disruptions' }
+      ],
       marketImplications: 'Current geopolitical conditions suggest elevated risk premiums across defense, energy, and precious metals sectors. Safe haven flows may accelerate if additional critical events emerge. Traders should monitor conflict-adjacent supply chains for disruption signals.',
       emergingPatterns: ['Multi-domain threat correlation between kinetic and cyber events', 'Increased military reconnaissance near contested regions', 'Market sentiment divergence from fundamental indicators'],
       recommendations: ['Increase position hedging in conflict-exposed sectors', 'Monitor CRITICAL event count for trend changes', 'Track military flight density as leading indicator'],
@@ -699,7 +724,11 @@ Return a JSON object:
       "description": "Detailed description of how this future plays out",
       "geopoliticalImpact": "How this affects regional stability",
       "marketImpact": "Specific impact on oil, gold, tech, defense stocks",
-      "keyTrigger": "The specific event that would confirm we are on this path"
+      "keyTrigger": "The specific event that would confirm we are on this path",
+      "suggestedTrades": [
+        { "ticker": "<Valid Ticker e.g. GLD>", "action": "BUY|SELL|SHORT", "reasoning": "Immediate action to take" },
+        { "ticker": "...", "action": "...", "reasoning": "..." }
+      ]
     },
     ... (Path B),
     ... (Path C)
@@ -713,9 +742,9 @@ Return a JSON object:
         scenarioName: `SIMULATION: ${eventTitle.substring(0, 30)}...`,
         baseAssessment: "Simulation core offline. Awaiting secure uplink to predictive nodes.",
         timelines: [
-          { path: "Path A: De-escalation", probability: 40, description: "Diplomatic channels successfully mediate the conflict.", geopoliticalImpact: "Regional stability improves.", marketImpact: "Safe havens retract, broad equities rally.", keyTrigger: "Ceasefire signed." },
-          { path: "Path B: Kinetic Escalation", probability: 35, description: "Conflict expands to neighboring territories.", geopoliticalImpact: "Border closures and military mobilization.", marketImpact: "Defense and oil surge.", keyTrigger: "Cross-border strike." },
-          { path: "Path C: Stalemate", probability: 25, description: "Conflict freezes along current lines.", geopoliticalImpact: "Long-term sanctions implemented.", marketImpact: "Supply chains permanently reroute, inflation persists.", keyTrigger: "Failed UN resolution." }
+          { path: "Path A: De-escalation", probability: 40, description: "Diplomatic channels successfully mediate the conflict.", geopoliticalImpact: "Regional stability improves.", marketImpact: "Safe havens retract, broad equities rally.", keyTrigger: "Ceasefire signed.", suggestedTrades: [{ ticker: 'GLD', action: 'SELL', reasoning: 'Safe haven fade' }, { ticker: 'SPY', action: 'BUY', reasoning: 'Broad rally' }] },
+          { path: "Path B: Kinetic Escalation", probability: 35, description: "Conflict expands to neighboring territories.", geopoliticalImpact: "Border closures and military mobilization.", marketImpact: "Defense and oil surge.", keyTrigger: "Cross-border strike.", suggestedTrades: [{ ticker: 'LMT', action: 'BUY', reasoning: 'Defense surge' }, { ticker: 'USO', action: 'BUY', reasoning: 'Oil squeeze' }] },
+          { path: "Path C: Stalemate", probability: 25, description: "Conflict freezes along current lines.", geopoliticalImpact: "Long-term sanctions implemented.", marketImpact: "Supply chains permanently reroute, inflation persists.", keyTrigger: "Failed UN resolution.", suggestedTrades: [{ ticker: 'UUP', action: 'BUY', reasoning: 'Dollar strength' }, { ticker: 'TLT', action: 'SELL', reasoning: 'Inflation expectations' }] }
         ]
       });
     }
@@ -837,6 +866,67 @@ Return ONLY a JSON object:
     console.error('[ai/tension] Error:', err.message);
     const history = Array.from({length: 24}, () => 20);
     res.json({ history });
+  }
+});
+
+// ============================================================
+//  GET /api/ai/auto-signals — AUTONOMOUS GEO-TRADE SCANNER
+// ============================================================
+
+router.get('/auto-signals', async (req, res) => {
+  try {
+    const cached = cache.get('ai_auto_signals');
+    if (cached) return res.json(cached);
+
+    const allEvents = cache.get('events') || [];
+    const allNews = cache.get('news') || [];
+    
+    const criticalEvents = allEvents.filter(e => e.severity === 'CRITICAL').slice(0, 5).map(e => `[${e.country || 'Global'}] ${e.title}`);
+    const topNews = allNews.filter(n => n.isBreaking).slice(0, 5).map(n => `[BREAKING] ${n.title}`);
+    
+    // Formulate a prompt assessing the global situation and autonomously identifying 3 trade ideas.
+    const prompt = `You are VERIDIAN GeoTrade AI, an autonomous financial intelligence engine.
+
+TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+
+=== TOP GLOBAL FLASHPOINTS ===
+${criticalEvents.length > 0 ? criticalEvents.join('\n') : 'No critical flashpoints.'}
+${topNews.length > 0 ? topNews.join('\n') : 'No breaking global news.'}
+
+=== YOUR TASK ===
+Scan the critical flashpoints above. Without the user asking for a specific stock, proactively identify the THREE best financial assets to trade RIGHT NOW based ONLY on these live events. Do not suggest generic ETFs unless absolutely necessary; hunt for specific companies or commodities directly impacted (e.g., LMT for defense, XOM for oil squeeze, GOLD for safe haven).
+
+Return ONLY a JSON object:
+{
+  "signals": [
+    {
+      "ticker": "Exact ticker symbol (e.g. LMT, CVX, GLD)",
+      "signal": "BUY|SELL|SHORT",
+      "confidence": <0-100, calculate based on directness of impact>,
+      "reasoning": "4-5 sentence detailed reasoning connecting the specific flashpoint above to this company's business model.",
+      "geopoliticalFactors": ["2-3 specific global drivers from the data"],
+      "timeHorizon": "SHORT|MEDIUM|LONG"
+    },
+    ... (total of 3 signals)
+  ]
+}`;
+
+    const aiResult = await generateAI(prompt);
+
+    if (!aiResult || !aiResult.signals) {
+      return res.json({
+        signals: [
+          { ticker: 'GLD', signal: 'BUY', confidence: 78, reasoning: 'Fallback safe-haven assessment triggered by offline AI node.', geopoliticalFactors: ['General Uncertainty'], timeHorizon: 'MEDIUM' }
+        ],
+        demo: true
+      });
+    }
+
+    cache.set('ai_auto_signals', aiResult, 15 * 60 * 1000); // 15 minute cache
+    res.json(aiResult);
+  } catch (err) {
+    console.error('[ai/auto-signals] Error:', err.message);
+    res.status(500).json({ error: 'Failed to generate auto signals' });
   }
 });
 
