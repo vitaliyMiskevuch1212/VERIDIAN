@@ -49,10 +49,10 @@ const ConfidenceMeter = ({ value, large }) => {
 };
 
 const StatCard = ({ icon, label, value, color, sub }) => (
-  <div className="bg-white/[0.02] border border-white/5 rounded-sm p-4 flex flex-col items-center justify-center text-center hover:bg-white/[0.04] transition-all">
+  <div className="bg-white/[0.02] border border-white/[0.05] rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-white/[0.04] transition-all card-interactive">
     <i className={`fa-solid ${icon} mb-2`} style={{ fontSize: 18, color: color || 'var(--color-cyan)' }} />
     <div className="text-2xl font-bold font-mono-num text-white mb-1">{value}</div>
-    <div className="text-[8px] text-white/30 font-mono uppercase tracking-widest">{label}</div>
+    <div className="text-[9px] text-white/30 font-mono uppercase tracking-widest">{label}</div>
     {sub && <div className="text-[8px] font-mono mt-1" style={{ color: color || 'var(--color-cyan)' }}>{sub}</div>}
   </div>
 );
@@ -60,7 +60,7 @@ const StatCard = ({ icon, label, value, color, sub }) => (
 const DistributionBar = ({ buy, hold, sell }) => {
   const total = buy + hold + sell || 1;
   return (
-    <div className="flex h-3 rounded-full overflow-hidden bg-white/5">
+    <div className="flex h-3 rounded-full overflow-hidden bg-white/[0.04]">
       {buy > 0 && <div className="h-full" style={{ width: `${(buy / total) * 100}%`, background: 'var(--color-green)' }} />}
       {hold > 0 && <div className="h-full" style={{ width: `${(hold / total) * 100}%`, background: 'var(--color-yellow)' }} />}
       {sell > 0 && <div className="h-full" style={{ width: `${(sell / total) * 100}%`, background: 'var(--color-red)' }} />}
@@ -101,7 +101,7 @@ function SignalDetailCard({ signal }) {
   const signalColor = signal.signal === 'BUY' ? 'var(--color-green)' : signal.signal === 'SELL' ? 'var(--color-red)' : 'var(--color-yellow)';
 
   return (
-    <div className="bg-[#0D1520] border border-white/5 rounded-sm overflow-hidden hover:bg-[#121B2A] transition-all group">
+    <div className="bg-[var(--color-card)] border border-white/[0.05] rounded-md overflow-hidden hover:bg-[var(--color-card-hover)] transition-all group card-interactive">
       <div className="p-4">
         {/* Header & Chart Grid */}
         <div className="grid grid-cols-12 gap-6 mb-3">
@@ -145,7 +145,7 @@ function SignalDetailCard({ signal }) {
 
         {/* Trigger Event */}
         {signal.triggerEvent && (
-          <div className="mt-2 flex items-center gap-2 bg-[var(--color-cyan)]/5 border border-[var(--color-cyan)]/10 rounded-sm px-3 py-1.5">
+          <div className="mt-2 flex items-center gap-2 bg-[var(--color-cyan)]/[0.04] border border-[var(--color-cyan)]/[0.1] rounded-md px-3 py-1.5">
             <i className="fa-solid fa-bolt text-[var(--color-cyan)]" style={{ fontSize: 9 }} />
             <span className="text-[10px] text-[var(--color-cyan)]/70">Triggered by: {signal.triggerEvent}</span>
           </div>
@@ -168,16 +168,16 @@ function SignalDetailCard({ signal }) {
 
         {/* Expand */}
         <button onClick={() => setExpanded(!expanded)}
-          className="mt-3 text-[9px] text-white/25 bg-transparent border-none cursor-pointer hover:text-white/50 transition-colors flex items-center gap-1.5">
+            className="mt-3 text-[9px] text-white/25 bg-transparent border-none cursor-pointer hover:text-white/50 transition-colors flex items-center gap-1.5 btn-press">
           <i className={`fa-solid fa-chevron-${expanded ? 'up' : 'down'}`} style={{ fontSize: 8 }} />
           {expanded ? 'Collapse Details' : 'Expand Full Analysis'}
         </button>
 
         {expanded && (
-          <div className="mt-3 pt-3 border-t border-white/5 grid grid-cols-2 gap-3 animate-fade-in">
+          <div className="mt-3 pt-3 border-t border-white/[0.05] grid grid-cols-2 gap-3 animate-fade-in">
             {/* Geopolitical Drivers */}
             {signal.geopoliticalFactors?.length > 0 && (
-              <div className="bg-white/[0.02] border border-white/5 rounded-sm p-3">
+              <div className="bg-white/[0.02] border border-white/[0.05] rounded-md p-3">
                 <div className="text-[8px] font-bold text-[var(--color-cyan)] uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
                   <i className="fa-solid fa-globe" style={{ fontSize: 9 }} /> Geopolitical Drivers
                 </div>
@@ -192,7 +192,7 @@ function SignalDetailCard({ signal }) {
 
             {/* Risk Factors */}
             {signal.riskFactors?.length > 0 && (
-              <div className="bg-white/[0.02] border border-white/5 rounded-sm p-3">
+              <div className="bg-white/[0.02] border border-white/[0.05] rounded-md p-3">
                 <div className="text-[8px] font-bold text-[var(--color-red)] uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
                   <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: 9 }} /> Risk Factors
                 </div>
@@ -207,7 +207,7 @@ function SignalDetailCard({ signal }) {
 
             {/* Correlated Assets */}
             {signal.correlatedAssets?.length > 0 && (
-              <div className="bg-white/[0.02] border border-white/5 rounded-sm p-3">
+              <div className="bg-white/[0.02] border border-white/[0.05] rounded-md p-3">
                 <div className="text-[8px] font-bold text-[var(--color-purple)] uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
                   <i className="fa-solid fa-link" style={{ fontSize: 9 }} /> Correlated Assets
                 </div>
@@ -222,7 +222,7 @@ function SignalDetailCard({ signal }) {
 
             {/* Stop-Loss */}
             {signal.stopLossReasoning && (
-              <div className="bg-[var(--color-red)]/5 border border-[var(--color-red)]/15 rounded-sm p-3">
+              <div className="bg-[var(--color-red)]/[0.04] border border-[var(--color-red)]/[0.1] rounded-md p-3">
                 <div className="text-[8px] font-bold text-[var(--color-red)] uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5">
                   <i className="fa-solid fa-shield-halved" style={{ fontSize: 9 }} /> Stop-Loss Trigger
                 </div>
@@ -272,21 +272,21 @@ export default function SignalsFullPage({ onClose }) {
   }, [stats.recentSignals]);
 
   return (
-    <div className="absolute inset-0 z-30 bg-[#060B14] overflow-hidden flex flex-col animate-fade-in">
+    <div className="absolute inset-0 z-50 bg-[#060B14] overflow-hidden flex flex-col animate-fade-in">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-black/40 backdrop-blur-xl flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-white/[0.05] bg-black/40 backdrop-blur-xl flex-shrink-0">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-brain text-[var(--color-cyan)] text-lg" />
           <h1 className="text-white font-heading uppercase tracking-[0.4em] text-sm">Signal Intelligence</h1>
-          <span className="text-[8px] text-white/20 font-mono uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Full View</span>
+          <span className="text-[8px] text-white/20 font-mono uppercase tracking-wider bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/[0.05]">Full View</span>
         </div>
         <div className="flex items-center gap-4">
           <button onClick={() => { fetchSignalHistory({ type: filterType, trigger: filterTrigger }); fetchSignalStats(); }}
-            className="px-3 py-1.5 text-white/30 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-sm transition-all cursor-pointer flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+            className="px-3 py-1.5 text-white/30 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-md transition-all cursor-pointer flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold btn-press">
             <i className="fa-solid fa-arrow-rotate-right" /> Refresh
           </button>
           <button onClick={onClose}
-            className="px-4 py-1.5 text-white/30 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-sm transition-all cursor-pointer flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+            className="px-4 py-1.5 text-white/30 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-md transition-all cursor-pointer flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold btn-press">
             <i className="fa-solid fa-xmark" /> Close
           </button>
         </div>
@@ -308,7 +308,7 @@ export default function SignalsFullPage({ onClose }) {
           {/* Distribution + Confidence Chart */}
           <div className="grid grid-cols-2 gap-4">
             {/* Distribution */}
-            <div className="bg-[#0D1520] border border-white/5 rounded-sm p-5">
+            <div className="bg-[var(--color-card)] border border-white/[0.05] rounded-md p-5">
               <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-4">Signal Distribution</div>
               <DistributionBar
                 buy={stats.distribution?.buy || 0}
@@ -336,7 +336,7 @@ export default function SignalsFullPage({ onClose }) {
             </div>
 
             {/* Confidence Trend Chart */}
-            <div className="bg-[#0D1520] border border-white/5 rounded-sm p-5">
+            <div className="bg-[var(--color-card)] border border-white/[0.05] rounded-md p-5">
               <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-4">Recent Confidence Trend</div>
               {confidenceChart.length > 0 ? (
                 <div className="h-32">
@@ -361,11 +361,11 @@ export default function SignalsFullPage({ onClose }) {
           </div>
 
           {/* Filters */}
-          <div className="flex items-center gap-2 bg-[#0D1520] border border-white/5 rounded-sm px-4 py-3">
+          <div className="flex items-center gap-2 bg-[var(--color-card)] border border-white/[0.05] rounded-md px-4 py-3">
             <span className="text-[9px] text-white/25 font-mono uppercase tracking-wider mr-2">Filter:</span>
             {['BUY', 'HOLD', 'SELL'].map(type => (
               <button key={type} onClick={() => setFilterType(prev => prev === type ? null : type)}
-                className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider border rounded-sm cursor-pointer transition-all"
+                className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider border rounded-md cursor-pointer transition-all btn-press"
                 style={{
                   background: filterType === type ? `${type === 'BUY' ? 'var(--color-green)' : type === 'SELL' ? 'var(--color-red)' : 'var(--color-yellow)'}15` : 'transparent',
                   color: filterType === type ? (type === 'BUY' ? 'var(--color-green)' : type === 'SELL' ? 'var(--color-red)' : 'var(--color-yellow)') : 'var(--color-text-muted)',
@@ -377,7 +377,7 @@ export default function SignalsFullPage({ onClose }) {
             <div className="w-px h-5 bg-white/10 mx-2" />
             {[{ key: 'auto', label: 'Auto', icon: 'fa-bolt' }, { key: 'manual', label: 'Manual', icon: 'fa-user' }].map(t => (
               <button key={t.key} onClick={() => setFilterTrigger(prev => prev === t.key ? null : t.key)}
-                className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider border rounded-sm cursor-pointer transition-all flex items-center gap-1.5"
+                className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider border rounded-md cursor-pointer transition-all flex items-center gap-1.5 btn-press"
                 style={{
                   background: filterTrigger === t.key ? 'rgba(0,212,255,0.1)' : 'transparent',
                   color: filterTrigger === t.key ? 'var(--color-cyan)' : 'var(--color-text-muted)',
@@ -388,7 +388,7 @@ export default function SignalsFullPage({ onClose }) {
             ))}
             {(filterType || filterTrigger) && (
               <button onClick={() => { setFilterType(null); setFilterTrigger(null); }}
-                className="ml-auto px-3 py-1 text-[9px] text-white/30 hover:text-white bg-transparent border border-white/10 rounded-sm cursor-pointer transition-all uppercase tracking-wider font-bold">
+                className="ml-auto px-3 py-1 text-[9px] text-white/30 hover:text-white bg-transparent border border-white/[0.08] rounded-md cursor-pointer transition-all uppercase tracking-wider font-bold btn-press">
                 Clear All
               </button>
             )}
@@ -396,14 +396,14 @@ export default function SignalsFullPage({ onClose }) {
 
           {/* Loading */}
           {historyLoading && (
-            <div className="h-48 border border-white/5 rounded-sm overflow-hidden">
+            <div className="h-48 border border-white/[0.05] rounded-md overflow-hidden">
               <TerminalLoader context="LOADING SIGNAL INTELLIGENCE DATABASE" />
             </div>
           )}
 
           {/* Empty State */}
           {!historyLoading && !hasSignals && (
-            <div className="py-16 text-center border border-white/5 border-dashed rounded-sm">
+            <div className="py-16 text-center border border-white/[0.05] border-dashed rounded-md">
               <i className="fa-solid fa-brain text-white/10 text-5xl mb-4" />
               <p className="text-white/20 text-sm uppercase tracking-widest font-mono mb-2">No Signals Generated</p>
               <p className="text-white/10 text-[11px] max-w-md mx-auto">

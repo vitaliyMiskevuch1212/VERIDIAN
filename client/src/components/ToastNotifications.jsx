@@ -167,7 +167,7 @@ function Toast({ id, type, title, subtitle, onDismiss, index }) {
       }}
     >
       <div
-        className="relative overflow-hidden rounded-sm backdrop-blur-xl"
+        className="relative overflow-hidden rounded-md backdrop-blur-xl"
         style={{
           // Per-type gradient pulled from TOAST_CONFIG gives each
           // category a distinct coloured glass appearance.
@@ -192,7 +192,7 @@ function Toast({ id, type, title, subtitle, onDismiss, index }) {
         <div className="flex items-start gap-3 p-3.5">
           {/* Icon badge — small coloured square with the type's FA icon */}
           <div
-            className="flex-shrink-0 w-8 h-8 rounded-sm flex items-center justify-center mt-0.5"
+            className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center mt-0.5"
             style={{
               background: `${config.color}15`,
               border: `1px solid ${config.color}30`,
@@ -209,7 +209,7 @@ function Toast({ id, type, title, subtitle, onDismiss, index }) {
             <div className="flex items-center gap-2 mb-1">
               {/* Type label pill — e.g. "AI SIGNAL", "CRITICAL ALERT" */}
               <span
-                className="text-[7px] font-bold uppercase tracking-[0.25em] px-1.5 py-0.5 rounded-sm"
+                className="text-[8px] font-bold uppercase tracking-[0.2em] px-1.5 py-0.5 rounded"
                 style={{
                   color: config.color,
                   background: `${config.color}15`,
@@ -219,12 +219,12 @@ function Toast({ id, type, title, subtitle, onDismiss, index }) {
                 {config.label}
               </span>
               {/* Timestamp — rendered at paint time, not updated live */}
-              <span className="text-[8px] font-mono text-white/20">
+              <span className="text-[8px] font-mono text-white/25">
                 {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
             {/* Primary message — e.g. "BUY AAPL — 87% Confidence" */}
-            <p className="text-white text-[11px] font-bold leading-tight line-clamp-2 tracking-tight">
+            <p className="text-white text-[12px] font-semibold leading-tight line-clamp-2 tracking-tight">
               {title}
             </p>
             {/* Secondary line — e.g. "AUTO-SIGNAL • TAIWAN STRAIT TENSION..." */}
@@ -238,7 +238,7 @@ function Toast({ id, type, title, subtitle, onDismiss, index }) {
           {/* Close button — dismisses immediately without waiting for timer */}
           <button
             onClick={handleDismiss}
-            className="flex-shrink-0 text-white/20 hover:text-white/60 transition-colors bg-transparent border-none cursor-pointer p-1"
+            className="flex-shrink-0 text-white/15 hover:text-white/60 hover:bg-white/[0.06] rounded-md transition-all bg-transparent border-none cursor-pointer p-1.5 btn-press"
           >
             <i className="fa-solid fa-xmark text-[10px]" />
           </button>

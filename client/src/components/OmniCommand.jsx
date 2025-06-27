@@ -231,37 +231,35 @@ export default function OmniCommand({ isOpen, onClose, events = [], news = [], o
   return (
     // Backdrop — full-viewport overlay; clicking outside the modal closes it
     <div
-      className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] bg-black/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] bg-black/70 backdrop-blur-md animate-fade-in"
       onClick={onClose}
     >
-      {/* Modal panel — stopPropagation prevents backdrop click from firing */}
+      {/* Modal panel */}
       <div
-        className="w-full max-w-2xl bg-[#0A0F1E] border border-[var(--color-cyan)]/30 rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(0,212,255,0.1)] overflow-hidden flex flex-col"
+        className="w-full max-w-2xl bg-gradient-to-b from-[#0C1220] to-[#0A0F1E] border border-[var(--color-cyan)]/20 rounded-xl overflow-hidden flex flex-col"
+        style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.6), 0 0 30px rgba(0,212,255,0.08), inset 0 1px 0 rgba(255,255,255,0.04)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* ── Search Input Header ── */}
-        <div className="flex items-center px-4 py-4 border-b border-white/10 bg-black/40 relative">
-          {/* Pulsing caret — reinforces "active command line" aesthetic */}
-          <i className="fa-solid fa-angle-right text-[var(--color-cyan)] text-lg mr-3 animate-pulse"></i>
+        <div className="flex items-center px-5 py-4 border-b border-white/[0.06] bg-black/30 relative">
+          <i className="fa-solid fa-angle-right text-[var(--color-cyan)] text-lg mr-3 animate-pulse drop-shadow-[0_0_6px_rgba(0,212,255,0.4)]"></i>
           <input
             ref={inputRef}
             type="text"
-            className="flex-1 bg-transparent border-none text-white text-lg font-mono placeholder-white/20 outline-none"
+            className="flex-1 bg-transparent border-none text-white text-lg font-mono placeholder-white/15 outline-none"
             placeholder="Search coordinates, intel, or stock tickers (e.g., LMT)..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {/* Keyboard hint badge */}
-          <div className="text-[10px] text-white/30 font-bold tracking-wider uppercase bg-white/5 px-2 py-1 rounded">ESC to close</div>
+          <div className="text-[10px] text-white/25 font-bold tracking-wider uppercase bg-white/[0.04] px-2.5 py-1 rounded-md border border-white/[0.06]">ESC to close</div>
         </div>
 
         {/* ── Result List ── */}
         {/* max-h + overflow-y-auto keeps the modal height stable as results grow */}
-        <div className="max-h-[50vh] overflow-y-auto custom-scrollbar flex flex-col p-2 space-y-1">
+        <div className="max-h-[50vh] overflow-y-auto custom-scrollbar flex flex-col p-2.5 space-y-1">
           {results.length === 0 ? (
-            // Empty state — shown when a query produces no matches
-            <div className="p-8 text-center text-white/30 font-mono text-sm">
-              <i className="fa-solid fa-radar text-2xl mb-3 opacity-20 block"></i>
+            <div className="p-10 text-center text-white/20 font-mono text-sm">
+              <i className="fa-solid fa-satellite-dish text-2xl mb-3 opacity-15 block"></i>
               NO INTELLIGENCE FOUND
             </div>
           ) : (
@@ -279,10 +277,10 @@ export default function OmniCommand({ isOpen, onClose, events = [], news = [], o
                   key={idx}
                   onClick={() => handleSelect(result)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`flex items-center gap-3 p-3 rounded-sm cursor-pointer transition-all border-l-2 ${
+                  className={`flex items-center gap-3 p-3.5 rounded-md cursor-pointer transition-all border-l-2 ${
                     isActive
-                      ? 'bg-[var(--color-cyan)]/10 border-[var(--color-cyan)] shadow-[inset_0_0_15px_rgba(0,212,255,0.1)]'
-                      : 'bg-transparent border-transparent hover:bg-white/5'
+                      ? 'bg-[var(--color-cyan)]/[0.07] border-[var(--color-cyan)] shadow-[inset_0_0_20px_rgba(0,212,255,0.06)]'
+                      : 'bg-transparent border-transparent hover:bg-white/[0.03]'
                   }`}
                 >
                   {/* Icon column — cyan when active, green + pulse when live ticker */}
@@ -297,7 +295,7 @@ export default function OmniCommand({ isOpen, onClose, events = [], news = [], o
                       {/* Severity pill — only rendered for EVENT and INTEL results */}
                       {result.severity && (
                         <span
-                          className="text-[8px] px-1 py-0.5 border rounded-sm font-mono leading-none flex items-center h-fit"
+                          className="text-[8px] px-1.5 py-0.5 border rounded font-mono leading-none flex items-center h-fit"
                           style={{ color: severityColor, borderColor: `${severityColor}60` }}
                         >
                           {result.severity}
@@ -305,7 +303,7 @@ export default function OmniCommand({ isOpen, onClose, events = [], news = [], o
                       )}
                     </div>
                     {/* Result type label (COUNTRY / EVENT / INTEL / FINANCE …) */}
-                    <div className="text-[10px] text-[var(--color-cyan)] uppercase tracking-widest font-mono mt-0.5">
+                    <div className="text-[10px] text-[var(--color-cyan)]/60 uppercase tracking-widest font-mono mt-0.5">
                       {result.type}
                     </div>
                   </div>
@@ -321,20 +319,20 @@ export default function OmniCommand({ isOpen, onClose, events = [], news = [], o
         </div>
 
         {/* ── Footer: keyboard hints + status label ── */}
-        <div className="bg-[#050810] px-4 py-2 flex items-center justify-between border-t border-white/5">
-          <div className="flex items-center gap-4 text-[9px] text-white/40 font-mono">
+        <div className="bg-[#040810] px-5 py-2.5 flex items-center justify-between border-t border-white/[0.05]">
+          <div className="flex items-center gap-4 text-[9px] text-white/30 font-mono">
             <span>
-              <kbd className="px-1 py-0.5 bg-white/5 rounded border border-white/10 text-white/60">↑</kbd>{' '}
-              <kbd className="px-1 py-0.5 bg-white/5 rounded border border-white/10 text-white/60">↓</kbd>{' '}
+              <kbd className="px-1.5 py-0.5 bg-white/[0.04] rounded-md border border-white/[0.08] text-white/50">↑</kbd>{' '}
+              <kbd className="px-1.5 py-0.5 bg-white/[0.04] rounded-md border border-white/[0.08] text-white/50">↓</kbd>{' '}
               to navigate
             </span>
             <span>
-              <kbd className="px-1 py-0.5 bg-white/5 rounded border border-white/10 text-white/60">ENTER</kbd>{' '}
+              <kbd className="px-1.5 py-0.5 bg-white/[0.04] rounded-md border border-white/[0.08] text-white/50">ENTER</kbd>{' '}
               to select
             </span>
           </div>
-          {/* Live status indicator */}
-          <div className="text-[9px] tracking-[0.2em] uppercase text-[var(--color-cyan)] font-bold">
+          <div className="text-[9px] tracking-[0.2em] uppercase text-[var(--color-cyan)]/70 font-bold flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-cyan)] animate-pulse shadow-[0_0_4px_var(--color-cyan)]"></span>
             Omni-Command Active
           </div>
         </div>

@@ -103,6 +103,24 @@ export default function WargameModal({ event, onClose }) {
                           <div className="text-[8px] uppercase tracking-widest text-white/30 mb-1">Market Impact</div>
                           <div className="text-[10px] text-white/70 pl-2 border-l border-white/10">{timeline.marketImpact}</div>
                         </div>
+
+                        {timeline.suggestedTrades?.length > 0 && (
+                          <div className="pt-2">
+                            <div className="text-[8px] uppercase tracking-widest text-[var(--color-gold)] mb-1.5 flex items-center gap-1.5">
+                              <i className="fa-solid fa-bolt"></i> Actionable Intelligence
+                            </div>
+                            <div className="flex flex-col gap-1.5 border-l-2 pl-2 border-[var(--color-gold)]/30">
+                              {timeline.suggestedTrades.map((trade, tIdx) => (
+                                <div key={tIdx} className="flex items-center justify-between text-[9px] bg-white/[0.02] border border-white/5 p-1.5 rounded-sm">
+                                  <span className={`font-bold font-mono px-1.5 py-0.5 rounded-sm flex items-center gap-1 ${['BUY', 'LONG'].includes(trade.action?.toUpperCase()) ? 'text-[var(--color-green)] bg-[var(--color-green)]/10' : ['SELL', 'SHORT'].includes(trade.action?.toUpperCase()) ? 'text-[var(--color-red)] bg-[var(--color-red)]/10' : 'text-[var(--color-yellow)] bg-[var(--color-yellow)]/10'}`}>
+                                    {trade.action} ${trade.ticker}
+                                  </span>
+                                  <span className="text-white/50 text-right leading-tight max-w-[65%]">{trade.reasoning}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Footer Trigger */}

@@ -180,7 +180,7 @@ export default function TradeFullPage({ onClose }) {
   };
 
   return (
-    <div className="absolute inset-0 z-30 bg-[#060B14] overflow-hidden flex flex-col animate-fade-in">
+    <div className="absolute inset-0 z-50 bg-[#060B14] overflow-hidden flex flex-col animate-fade-in">
       {/* Top Bar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-black/40 backdrop-blur-xl flex-shrink-0">
         <div className="flex items-center gap-3">

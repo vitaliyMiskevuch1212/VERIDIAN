@@ -37,26 +37,26 @@ export default function VesselConsole({ vessels = [], activeCategory, onCategory
       {/* Position it to the right, safely above the bottom graphs */}
       <div className="absolute bottom-20 right-4 z-[60] pointer-events-auto">
         <div 
-          className="backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden transition-all duration-300 bg-gradient-to-b from-[#060B14]/80 to-[#0A0F1E]/90"
+          className="backdrop-blur-xl border border-white/[0.08] rounded-md overflow-hidden transition-all duration-300 bg-gradient-to-b from-[#060B14]/85 to-[#0A0F1E]/92"
           style={{ 
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
+            boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.04)',
             minWidth: isExpanded ? 500 : 200,
             maxWidth: 600
           }}
         >
           {/* Header */}
           <div 
-            className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-white/5 transition-colors"
+            className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-white/[0.03] transition-colors"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <div className="flex items-center gap-3">
-              <i className="fa-solid fa-anchor text-[#00ff7f] text-xs"></i>
-              <span className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Maritime Traffic</span>
+              <i className="fa-solid fa-anchor text-[#00ff7f] text-xs drop-shadow-[0_0_4px_rgba(0,255,127,0.3)]"></i>
+              <span className="text-white/70 text-[10px] font-semibold uppercase tracking-[0.2em]">Maritime Traffic</span>
               <span className="text-[#00ff7f] font-mono text-xs font-bold">{vessels.length}</span>
               
               {/* Surge Badge */}
               {surgeCount > 0 && (
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider animate-pulse"
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider"
                   style={{ 
                     background: 'rgba(239,68,68,0.15)', 
                     color: '#f87171', 
@@ -69,14 +69,14 @@ export default function VesselConsole({ vessels = [], activeCategory, onCategory
               )}
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-white/30 text-[8px] font-mono uppercase">AISSTREAM.IO</span>
-              <i className={`fa-solid fa-chevron-${isExpanded ? 'down' : 'up'} text-white/30 text-[10px] transition-transform`}></i>
+              <span className="text-white/20 text-[8px] font-mono uppercase">AISSTREAM.IO</span>
+              <i className={`fa-solid fa-chevron-${isExpanded ? 'down' : 'up'} text-white/20 text-[10px] transition-transform`}></i>
             </div>
           </div>
 
           {/* Category Pills */}
           {isExpanded && (
-            <div className="px-3 pb-3 pt-1 flex flex-wrap gap-2">
+            <div className="px-3 pb-3 pt-1 flex flex-wrap gap-2 border-t border-white/[0.05]">
               {CATEGORIES.map(cat => {
                 const count = categoryCounts[cat.id] || 0;
                 const active = activeCategory === cat.id;
@@ -90,10 +90,10 @@ export default function VesselConsole({ vessels = [], activeCategory, onCategory
                         else setShowList(true);
                     }}
                     className={`
-                      flex items-center gap-2 px-2.5 py-1.5 rounded-sm border transition-all duration-200
+                      flex items-center gap-2 px-2.5 py-1.5 rounded-md border transition-all duration-200 btn-press
                       ${active 
-                        ? 'bg-white/10 border-white/20' 
-                        : 'bg-white/5 border-transparent hover:bg-white/10 hover:border-white/10'}
+                        ? 'bg-white/[0.08] border-white/[0.12] text-white' 
+                        : 'bg-white/[0.015] border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] text-white/35 hover:text-white/60'}
                     `}
                   >
                     <i className={`fa-solid ${cat.icon} text-[10px]`} style={{ color: cat.color }}></i>
@@ -111,9 +111,9 @@ export default function VesselConsole({ vessels = [], activeCategory, onCategory
 
           {/* Expanded List View */}
           {isExpanded && showList && (
-            <div className="max-h-[250px] overflow-y-auto border-t border-white/5 bg-black/40 custom-scrollbar">
+            <div className="max-h-[250px] overflow-y-auto border-t border-white/[0.05] bg-black/30 custom-scrollbar">
               {displayedVessels.length === 0 ? (
-                <div className="p-4 text-center text-white/40 text-xs font-mono">NO TARGETS IN CATEGORY</div>
+                <div className="p-4 text-center text-white/30 text-xs font-mono">NO TARGETS IN CATEGORY</div>
               ) : (
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 bg-[#060B14] z-10">
@@ -150,7 +150,7 @@ export default function VesselConsole({ vessels = [], activeCategory, onCategory
                               e.stopPropagation();
                               if (onFlyTo) onFlyTo({ lat: v.lat, lng: v.lng });
                             }}
-                            className="bg-white/10 hover:bg-[#00ff7f]/20 hover:text-[#00ff7f] text-white/50 w-6 h-6 rounded flex items-center justify-center transition-colors"
+                            className="bg-white/[0.06] hover:bg-[#00ff7f]/20 hover:text-[#00ff7f] text-white/40 w-7 h-7 rounded-md flex items-center justify-center transition-colors btn-press"
                           >
                             <i className="fa-solid fa-location-crosshairs text-[10px]"></i>
                           </button>

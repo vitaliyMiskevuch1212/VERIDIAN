@@ -101,13 +101,38 @@ export default function SitrepPanel({ data, loading }) {
             <div className="text-[9px] text-white/40 font-bold uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
               <i className="fa-solid fa-arrow-trend-up text-[var(--color-orange)] text-[8px]"></i> Escalation Watch (24-48h)
             </div>
-            <div className="space-y-1.5">
-              {data.escalationWatch.map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-[10px] text-white/50">
-                  <i className="fa-solid fa-bolt text-[var(--color-yellow)] mt-0.5" style={{ fontSize: 8 }}></i>
-                  <span>{item}</span>
-                </div>
-              ))}
+            <div className="space-y-2">
+              {data.escalationWatch.map((item, i) => {
+                if (typeof item === 'string') {
+                  return (
+                    <div key={i} className="flex items-start gap-2 text-[10px] text-white/50">
+                      <i className="fa-solid fa-bolt text-[var(--color-yellow)] mt-0.5" style={{ fontSize: 8 }}></i>
+                      <span>{item}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={i} className="flex flex-col bg-[#0D1520] border border-white/5 rounded-sm p-3 gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <i className="fa-solid fa-bolt text-[var(--color-red)]" style={{ fontSize: 10 }}></i>
+                        <span className="text-white font-bold text-[10px] leading-tight">{item.threat}</span>
+                      </div>
+                      <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-sm ${item.probability > 70 ? 'bg-[var(--color-red)]/10 text-[var(--color-red)] border border-[var(--color-red)]/30' : 'bg-[var(--color-orange)]/10 text-[var(--color-orange)] border border-[var(--color-orange)]/30'}`}>
+                        {item.probability}%
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[9px] mt-1">
+                      <span className="text-white/40 uppercase tracking-widest bg-white/5 px-1 py-0.5 border border-white/10 rounded-sm">
+                        {item.timeframe}
+                      </span>
+                      <span className="text-white/50 border-l border-white/10 pl-2">
+                        <strong className="text-white/30 uppercase tracking-widest">Trigger:</strong> {item.trigger}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

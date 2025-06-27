@@ -24,7 +24,6 @@ export default function DashboardRightPanel() {
     sitrep,
     sitrepLoading,
     events,
-    // Signal pipeline
     watchlist,
     signalHistory,
     signalStats,
@@ -77,13 +76,13 @@ export default function DashboardRightPanel() {
   if (!rightPanelVisible) return null;
 
   return (
-    <div className="w-[340px] flex-shrink-0 bg-gradient-to-b from-[#060B14]/95 to-[#0A0F1E]/95 backdrop-blur-3xl border-l border-white/5 flex flex-col z-40 overflow-hidden animate-fade-in">
+    <div className="w-[340px] flex-shrink-0 bg-gradient-to-b from-[#070C18]/95 via-[#090E1C]/95 to-[#0C1222]/95 backdrop-blur-2xl border-l border-white/[0.05] flex flex-col z-40 overflow-hidden panel-slide-in-right">
       {/* Tab Header */}
-      <div className="flex border-b border-white/5 bg-black/20">
+      <div className="flex border-b border-white/[0.06] bg-black/30">
         {[
           { id: "news", label: "Intel", icon: "fa-tower-broadcast" },
           { id: "finance", label: "Trade", icon: "fa-chart-line" },
-          { id: "predictions", label: "Forecast", icon: "fa-crystal-ball" },
+          { id: "predictions", label: "Forecast", icon: "fa-chart-area" },
           { id: "sitrep", label: "SITREP", icon: "fa-shield-halved" },
           { id: "signals", label: "Signals", icon: "fa-brain" },
         ].map((tab) => (
@@ -94,17 +93,15 @@ export default function DashboardRightPanel() {
                 ? handleSignalsTabClick()
                 : setActiveTab(tab.id)
             }
-            className="flex-1 py-3 text-[9px] font-heading uppercase tracking-[0.12em] flex flex-col items-center justify-center gap-1.5 border-none transition-all cursor-pointer outline-none relative group"
+            className="flex-1 py-3.5 text-[9px] font-heading uppercase tracking-[0.1em] flex flex-col items-center justify-center gap-1.5 border-none transition-all cursor-pointer outline-none relative group btn-press"
             style={{
               background:
-                activeTab === tab.id ? "rgba(0,212,255,0.08)" : "transparent",
+                activeTab === tab.id ? "rgba(0,212,255,0.06)" : "transparent",
               color:
                 activeTab === tab.id
                   ? tab.id === "sitrep"
                     ? "var(--color-red)"
-                    : tab.id === "signals"
-                      ? "var(--color-cyan)"
-                      : "var(--color-cyan)"
+                    : "var(--color-cyan)"
                   : "var(--color-text-muted)",
             }}
           >
@@ -124,21 +121,16 @@ export default function DashboardRightPanel() {
                       : tab.id === "signals"
                         ? "var(--color-cyan)"
                         : "var(--color-orange)",
-                  boxShadow: `0 0 6px ${tab.id === "sitrep" ? "rgba(239,68,68,0.5)" : tab.id === "signals" ? "rgba(0,212,255,0.5)" : "rgba(249,115,22,0.5)"}`,
+                  boxShadow: `0 0 8px ${tab.id === "sitrep" ? "rgba(239,68,68,0.5)" : tab.id === "signals" ? "rgba(0,212,255,0.5)" : "rgba(249,115,22,0.5)"}`,
                 }}
               >
                 {tabBadges[tab.id]}
               </span>
             )}
+            {/* Glowing tab indicator */}
             {activeTab === tab.id && (
               <div
-                className="absolute bottom-0 left-0 right-0 h-[2px]"
-                style={{
-                  background:
-                    tab.id === "sitrep"
-                      ? "var(--color-red)"
-                      : "var(--color-cyan)",
-                }}
+                className={`absolute bottom-0 left-0 right-0 ${tab.id === "sitrep" ? "tab-active-indicator-red" : "tab-active-indicator"}`}
               ></div>
             )}
           </button>
@@ -146,15 +138,15 @@ export default function DashboardRightPanel() {
         {/* Full Page Button */}
         <button
           onClick={() => setFullPageView(activeTab)}
-          className="px-2 py-3 text-white/20 hover:text-[var(--color-cyan)] transition-all cursor-pointer border-l border-white/5 bg-transparent group outline-none"
+          className="px-2.5 py-3.5 text-white/15 hover:text-[var(--color-cyan)] transition-all cursor-pointer border-l border-white/[0.06] bg-transparent group outline-none btn-press"
           title="Open Full Page View"
         >
           <i className="fa-solid fa-expand text-xs group-hover:scale-110 transition-transform"></i>
         </button>
-        {/* Close Button Integrated in Tabs */}
+        {/* Close Button */}
         <button
           onClick={() => setRightPanelVisible(false)}
-          className="px-3 py-3 text-white/20 hover:text-[var(--color-red)] transition-all cursor-pointer border-l border-white/5 bg-transparent group outline-none"
+          className="px-3 py-3.5 text-white/15 hover:text-[var(--color-red)] transition-all cursor-pointer border-l border-white/[0.06] bg-transparent group outline-none btn-press"
           title="Close Panel"
         >
           <i className="fa-solid fa-xmark text-xs group-hover:scale-110 transition-transform"></i>
@@ -166,15 +158,12 @@ export default function DashboardRightPanel() {
         <ErrorBoundary name="Intel Panel">
           {activeTab === "news" && (
             <div>
-              {/* Market Watch Section */}
-              <div className="border-b border-white/5">
+              <div className="border-b border-white/[0.05]">
                 <MarketWatch overview={overview} />
               </div>
-              {/* Top Keywords Section */}
-              <div className="border-b border-white/5">
+              <div className="border-b border-white/[0.05]">
                 <TopKeywords news={news} />
               </div>
-              {/* MAIN NEWS FEED - REMOVED TITLE AS PER REQUEST */}
               <NewsPanel
                 news={news}
                 loading={newsLoading}

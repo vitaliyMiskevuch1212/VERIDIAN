@@ -31,10 +31,10 @@ const SEVERITY_COLORS = {
 // Static fallback regions (used when AI regions haven't loaded yet)
 const FALLBACK_REGIONS = [
   { name: 'Middle East', icon: 'fa-solid fa-mosque', stability: 32, trend: 'DETERIORATING', topThreat: 'Loading...', aiSummary: '', keywords: ['conflict', 'military', 'sanctions'], criticalEvents: 0, totalEvents: 0 },
-  { name: 'Europe', icon: 'fa-solid fa-landmark', stability: 58, trend: 'STABLE', topThreat: 'Loading...', aiSummary: '', keywords: ['NATO', 'energy', 'defense'], criticalEvents: 0, totalEvents: 0 },
-  { name: 'Asia-Pacific', icon: 'fa-solid fa-torii-gate', stability: 51, trend: 'DETERIORATING', topThreat: 'Loading...', aiSummary: '', keywords: ['trade', 'maritime', 'nuclear'], criticalEvents: 0, totalEvents: 0 },
-  { name: 'Americas', icon: 'fa-solid fa-building-columns', stability: 67, trend: 'STABLE', topThreat: 'Loading...', aiSummary: '', keywords: ['economy', 'elections', 'migration'], criticalEvents: 0, totalEvents: 0 },
-  { name: 'Africa', icon: 'fa-solid fa-globe-africa', stability: 40, trend: 'DETERIORATING', topThreat: 'Loading...', aiSummary: '', keywords: ['security', 'resources', 'governance'], criticalEvents: 0, totalEvents: 0 },
+  { name: 'Europe', icon: 'fa-solid fa-landmark', stability: 78, trend: 'STABLE', topThreat: 'Loading...', aiSummary: '', keywords: ['NATO', 'energy', 'defense'], criticalEvents: 0, totalEvents: 0 },
+  { name: 'Asia-Pacific', icon: 'fa-solid fa-torii-gate', stability: 65, trend: 'STABLE', topThreat: 'Loading...', aiSummary: '', keywords: ['trade', 'maritime', 'nuclear'], criticalEvents: 0, totalEvents: 0 },
+  { name: 'Americas', icon: 'fa-solid fa-building-columns', stability: 80, trend: 'STABLE', topThreat: 'Loading...', aiSummary: '', keywords: ['economy', 'elections', 'migration'], criticalEvents: 0, totalEvents: 0 },
+  { name: 'Africa', icon: 'fa-solid fa-globe-africa', stability: 45, trend: 'DETERIORATING', topThreat: 'Loading...', aiSummary: '', keywords: ['security', 'resources', 'governance'], criticalEvents: 0, totalEvents: 0 },
 ];
 
 export default function RegionPanel({ events = [], onRegionClick, aiRegions = [] }) {

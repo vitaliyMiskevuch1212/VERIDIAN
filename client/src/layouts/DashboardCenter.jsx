@@ -10,7 +10,6 @@ import VesselConsole from "../components/VesselConsole";
 import VesselInfoPopup from "../components/VesselInfoPopup";
 import ErrorBoundary from "../components/ErrorBoundary";
 
-// Full Pages
 import IntelFullPage from "./IntelFullPage";
 import TradeFullPage from "./TradeFullPage";
 import ForecastFullPage from "./ForecastFullPage";
@@ -66,6 +65,14 @@ export default function DashboardCenter() {
     setScrubTime,
   } = useUI();
 
+  // Helper for toggle button styling
+  const toggleBtnClass = (active, color = "var(--color-cyan)") =>
+    `p-2 transition-all cursor-pointer border rounded-md w-8 h-8 flex items-center justify-center btn-press ${
+      active
+        ? `border-transparent`
+        : "border-white/[0.06] text-white/30 hover:text-white/50 hover:bg-white/[0.04]"
+    }`;
+
   return (
     <div className="flex-1 relative overflow-hidden">
       {/* Full Page Overlays */}
@@ -86,8 +93,8 @@ export default function DashboardCenter() {
       )}
 
       {/* Filter Bar + View Controls */}
-      <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-        <div className="pointer-events-auto backdrop-blur-md bg-black/40 border-b border-white/5 px-2 min-h-[48px] py-1 flex flex-wrap items-center gap-2">
+      <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
+        <div className="pointer-events-auto backdrop-blur-xl bg-gradient-to-b from-black/50 to-black/30 border-b border-white/[0.04] px-2 min-h-[48px] py-1 flex flex-wrap items-center gap-2">
           <div className="flex-1 min-w-[300px]">
             <FilterBar
               activeFilters={activeFilters}
@@ -98,14 +105,15 @@ export default function DashboardCenter() {
           </div>
 
           <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 px-2">
-            <div className="flex items-center bg-black/40 rounded-full p-1 border border-white/5">
+            {/* View mode toggle */}
+            <div className="flex items-center bg-black/30 rounded-md p-1 border border-white/[0.05]">
               <button
                 onMouseEnter={audio.playHover}
                 onClick={() => {
                   setViewMode("globe");
                   audio.playClick();
                 }}
-                className={`p-1.5 transition-all cursor-pointer border-none rounded-full ${viewMode === "globe" ? "text-[var(--color-cyan)] bg-[var(--color-cyan)]/20" : "text-muted"}`}
+                className={`p-1.5 transition-all cursor-pointer border-none rounded-md btn-press ${viewMode === "globe" ? "text-[var(--color-cyan)] bg-[var(--color-cyan)]/[0.12]" : "text-muted hover:text-white/50"}`}
                 title="3D Globe"
               >
                 <i className="fa-solid fa-earth-americas text-sm"></i>
@@ -116,83 +124,72 @@ export default function DashboardCenter() {
                   setViewMode("map2d");
                   audio.playClick();
                 }}
-                className={`p-1.5 transition-all cursor-pointer border-none rounded-full ${viewMode === "map2d" ? "text-[var(--color-cyan)] bg-[var(--color-cyan)]/20" : "text-muted"}`}
+                className={`p-1.5 transition-all cursor-pointer border-none rounded-md btn-press ${viewMode === "map2d" ? "text-[var(--color-cyan)] bg-[var(--color-cyan)]/[0.12]" : "text-muted hover:text-white/50"}`}
                 title="2D Map"
               >
                 <i className="fa-solid fa-map text-sm"></i>
               </button>
             </div>
 
+            {/* Layer toggles */}
             <div className="flex items-center gap-1.5">
               <button
                 onMouseEnter={audio.playHover}
-                onClick={() => {
-                  setShowFlights(!showFlights);
-                  audio.playClick();
-                }}
-                className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showFlights ? "text-[var(--color-cyan)] bg-[var(--color-cyan)]/20" : "text-muted"}`}
+                onClick={() => { setShowFlights(!showFlights); audio.playClick(); }}
+                className={toggleBtnClass(showFlights)}
+                style={showFlights ? { color: 'var(--color-cyan)', background: 'rgba(0,212,255,0.12)', borderColor: 'rgba(0,212,255,0.2)' } : {}}
                 title="Military Intelligence"
               >
                 <i className="fa-solid fa-fighter-jet text-[10px]"></i>
               </button>
               <button
                 onMouseEnter={audio.playHover}
-                onClick={() => {
-                  setShowVessels(!showVessels);
-                  audio.playClick();
-                }}
-                className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showVessels ? "text-[#00ff7f] bg-[#00ff7f]/20" : "text-muted"}`}
+                onClick={() => { setShowVessels(!showVessels); audio.playClick(); }}
+                className={toggleBtnClass(showVessels)}
+                style={showVessels ? { color: '#00ff7f', background: 'rgba(0,255,127,0.12)', borderColor: 'rgba(0,255,127,0.2)' } : {}}
                 title="Maritime Intelligence"
               >
                 <i className="fa-solid fa-anchor text-[10px]"></i>
               </button>
               <button
                 onMouseEnter={audio.playHover}
-                onClick={() => {
-                  setShowCyber(!showCyber);
-                  audio.playClick();
-                }}
-                className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showCyber ? "text-[var(--color-purple)] bg-[var(--color-purple)]/20" : "text-muted"}`}
+                onClick={() => { setShowCyber(!showCyber); audio.playClick(); }}
+                className={toggleBtnClass(showCyber)}
+                style={showCyber ? { color: 'var(--color-purple)', background: 'rgba(124,58,237,0.12)', borderColor: 'rgba(124,58,237,0.2)' } : {}}
                 title="Cyber Threats"
               >
                 <i className="fa-solid fa-shield-halved text-[10px]"></i>
               </button>
               <button
                 onMouseEnter={audio.playHover}
-                onClick={() => {
-                  setShowRegions(!showRegions);
-                  audio.playClick();
-                }}
-                className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showRegions ? "text-[var(--color-cyan)] bg-[var(--color-cyan)]/20" : "text-muted"}`}
+                onClick={() => { setShowRegions(!showRegions); audio.playClick(); }}
+                className={toggleBtnClass(showRegions)}
+                style={showRegions ? { color: 'var(--color-cyan)', background: 'rgba(0,212,255,0.12)', borderColor: 'rgba(0,212,255,0.2)' } : {}}
                 title="Regions"
               >
                 <i className="fa-solid fa-chart-pie text-[10px]"></i>
               </button>
               <button
                 onMouseEnter={audio.playHover}
-                onClick={() => {
-                  setShowHeatmap(!showHeatmap);
-                  audio.playClick();
-                }}
-                className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showHeatmap ? "text-[#ff4500] bg-[#ff4500]/20" : "text-muted"}`}
+                onClick={() => { setShowHeatmap(!showHeatmap); audio.playClick(); }}
+                className={toggleBtnClass(showHeatmap)}
+                style={showHeatmap ? { color: '#ff4500', background: 'rgba(255,69,0,0.12)', borderColor: 'rgba(255,69,0,0.2)' } : {}}
                 title="Threat Heatmap"
               >
                 <i className="fa-solid fa-fire-flame-curved text-[10px]"></i>
               </button>
               <button
                 onMouseEnter={audio.playHover}
-                onClick={() => {
-                  setShowTension(!showTension);
-                  audio.playClick();
-                }}
-                className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ${showTension ? "text-[var(--color-yellow)] bg-[var(--color-yellow)]/20" : "text-muted"}`}
+                onClick={() => { setShowTension(!showTension); audio.playClick(); }}
+                className={toggleBtnClass(showTension)}
+                style={showTension ? { color: 'var(--color-yellow)', background: 'rgba(234,179,8,0.12)', borderColor: 'rgba(234,179,8,0.2)' } : {}}
                 title="Global Tension Index"
               >
                 <i className="fa-solid fa-chart-line text-[10px]"></i>
               </button>
             </div>
 
-            {/* HIDE PANELS TOGGLE */}
+            {/* Panel toggle */}
             <button
               onMouseEnter={audio.playHover}
               onClick={() => {
@@ -205,7 +202,8 @@ export default function DashboardCenter() {
                 }
                 audio.playClick();
               }}
-              className={`p-2 transition-all cursor-pointer border border-veridian rounded-full w-8 h-8 flex items-center justify-center ml-2 ${!leftPanelVisible && !rightPanelVisible ? "text-[var(--color-gold)] bg-[var(--color-gold)]/20" : "text-muted"}`}
+              className={`${toggleBtnClass(!leftPanelVisible && !rightPanelVisible)} ml-2`}
+              style={!leftPanelVisible && !rightPanelVisible ? { color: 'var(--color-gold)', background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.2)' } : {}}
               title={
                 leftPanelVisible || rightPanelVisible
                   ? "Hide Intel Panels"
@@ -223,7 +221,7 @@ export default function DashboardCenter() {
       {/* Globe / Map */}
       <div
         id="tactical-map-container"
-        className="absolute inset-0 z-0 bg-[#060B14]"
+        className="absolute inset-0 z-0 bg-[#040810]"
       >
         <ErrorBoundary name="Tactical Map">
           {viewMode === "globe" ? (
@@ -256,9 +254,9 @@ export default function DashboardCenter() {
         </ErrorBoundary>
       </div>
 
-      {/* Region Panel Overlay */}
+      {/* Region Panel */}
       {showRegions && (
-        <div className="absolute bottom-36 left-4 right-4 z-20 pointer-events-auto animate-fade-in-up">
+        <div className="absolute top-14 bottom-36 left-4 right-4 z-20 pointer-events-auto animate-fade-in-up overflow-y-auto custom-scrollbar">
           <RegionPanel
             events={filteredEvents}
             onRegionClick={handleRegionClick}
@@ -267,10 +265,10 @@ export default function DashboardCenter() {
         </div>
       )}
 
-      {/* Tension Chart Overlay */}
+      {/* Tension Chart */}
       {showTension && <TensionChart events={filteredEvents} news={news} />}
 
-      {/* Military Flight Console */}
+      {/* Flight Console */}
       {showFlights && (
         <FlightConsole
           flights={filteredFlights}
@@ -280,7 +278,7 @@ export default function DashboardCenter() {
         />
       )}
 
-      {/* Maritime Vessel Console */}
+      {/* Vessel Console */}
       {showVessels && (
         <VesselConsole
           vessels={filteredVessels}
@@ -290,7 +288,7 @@ export default function DashboardCenter() {
         />
       )}
 
-      {/* Flight Info Popup — from Globe/Map airplane icon clicks */}
+      {/* Flight Popup */}
       {selectedFlight && (
         <FlightInfoPopup
           flight={selectedFlight}
@@ -302,7 +300,7 @@ export default function DashboardCenter() {
         />
       )}
 
-      {/* Vessel Info Popup — from Globe/Map vessel icon clicks */}
+      {/* Vessel Popup */}
       {selectedVessel && (
         <VesselInfoPopup
           vessel={selectedVessel}
@@ -316,22 +314,22 @@ export default function DashboardCenter() {
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
-        <div className="bg-[#060B14]/80 backdrop-blur-xl border border-white/5 py-2 px-3 flex items-center gap-4 text-[9px] uppercase tracking-tighter font-mono rounded-sm pointer-events-auto">
+        <div className="bg-[#040810]/70 backdrop-blur-xl border border-white/[0.05] py-2.5 px-4 flex items-center gap-5 text-[9px] uppercase tracking-tighter font-mono rounded-md pointer-events-auto shadow-lg">
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-            <span className="text-white/60">Critical</span>
+            <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.5)]"></span>
+            <span className="text-white/50">Critical</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-            <span className="text-white/60">High</span>
+            <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_4px_rgba(249,115,22,0.5)]"></span>
+            <span className="text-white/50">High</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
-            <span className="text-white/60">Medium</span>
+            <span className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_4px_rgba(234,179,8,0.5)]"></span>
+            <span className="text-white/50">Medium</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span className="text-white/60">Low</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]"></span>
+            <span className="text-white/50">Low</span>
           </div>
         </div>
       </div>
