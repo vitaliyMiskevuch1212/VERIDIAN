@@ -440,4 +440,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ─── GET /api/flights/debug ──────────────────────────────────
+router.get('/debug', async (req, res) => {
+  const errors = {};
+  try {
+    await fetchFromADSBfi();
+    errors.adsbfi = 'Success';
+  } catch (e) {
+    errors.adsbfi = { message: e.message, status: e.response?.status, data: e.response?.data };
+  }
+  try {
+    await fetchFromAirplanesLive();
+    errors.airplanesLive = 'Success';
+  } catch (e) {
+    errors.airplanesLive = { message: e.message, status: e.response?.status, data: e.response?.data };
+  }
+  try {
+    await fetchFromOpenSky();
+    errors.openSky = 'Success';
+  } catch (e) {
+    errors.openSky = { message: e.message, status: e.response?.status, data: e.response?.data };
+  }
+  res.json({ deployed_on_render: true, errors });
+});
+
 module.exports = router;
