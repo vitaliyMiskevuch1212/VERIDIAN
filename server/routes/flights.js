@@ -340,7 +340,7 @@ async function fetchFromADSBfi() {
 
 // ─── Additional Fallback: airplanes.live ──────────────────
 async function fetchFromAirplanesLive() {
-  const res = await axios.get('https://api.airplanes.live/v2/mil_a', {
+  const res = await axios.get('https://api.airplanes.live/v2/mil', {
     timeout: 12000,
     headers: { 'Accept-Encoding': 'gzip', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36 Veridian/1.0' },
   });
@@ -400,6 +400,7 @@ router.get('/', async (req, res) => {
     // 1️⃣ Try ADS-B.fi v2 (no auth needed, confirmed working)
     try {
       flights = await fetchFromADSBfi();
+      if (flights.length === 0) throw new Error('Data empty');
       source = 'ADS-B.fi';
       console.log(`[flights] ✅ ADS-B.fi: ${flights.length} tactical signals traced globally.`);
     } catch (err) {
@@ -408,6 +409,7 @@ router.get('/', async (req, res) => {
       // 2️⃣ Try airplanes.live fallback
       try {
         flights = await fetchFromAirplanesLive();
+        if (flights.length === 0) throw new Error('Data empty');
         source = 'airplanes.live';
         console.log(`[flights] ✅ airplanes.live fallback: ${flights.length} signals recovered.`);
       } catch (err2) {
@@ -416,6 +418,7 @@ router.get('/', async (req, res) => {
         // 3️⃣ Try OpenSky (authenticated, may be blocked on cloud IPs)
         try {
           flights = await fetchFromOpenSky();
+          if (flights.length === 0) throw new Error('Data empty');
           source = 'OpenSky';
           console.log(`[flights] ✅ OpenSky fallback: ${flights.length} signals recovered.`);
         } catch (err3) {
