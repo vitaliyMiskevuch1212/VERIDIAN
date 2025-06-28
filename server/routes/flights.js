@@ -248,6 +248,7 @@ async function fetchFromOpenSky(retries = 2) {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept-Encoding': 'gzip',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36 Veridian/1.0',
         },
       });
 
@@ -291,7 +292,7 @@ async function fetchFromOpenSky(retries = 2) {
 async function fetchFromADSBfi() {
   const adsbRes = await axios.get('https://opendata.adsb.fi/api/v2/mil', {
     timeout: 12000,
-    headers: { 'Accept-Encoding': 'gzip' },
+    headers: { 'Accept-Encoding': 'gzip', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36 Veridian/1.0' },
   });
 
   const aircraft = adsbRes.data?.aircraft || adsbRes.data?.ac || [];
@@ -341,7 +342,7 @@ async function fetchFromADSBfi() {
 async function fetchFromAirplanesLive() {
   const res = await axios.get('https://api.airplanes.live/v2/mil_a', {
     timeout: 12000,
-    headers: { 'Accept-Encoding': 'gzip' },
+    headers: { 'Accept-Encoding': 'gzip', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36 Veridian/1.0' },
   });
 
   const aircraft = res.data?.ac || [];
