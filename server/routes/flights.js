@@ -289,7 +289,7 @@ async function fetchFromOpenSky(retries = 2) {
 
 // ─── Fallback Source: ADS-B.fi ────────────────────────────
 async function fetchFromADSBfi() {
-  const adsbRes = await axios.get('https://opendata.adsb.fi/api/mil', {
+  const adsbRes = await axios.get('https://opendata.adsb.fi/api/v2/mil', {
     timeout: 12000,
     headers: { 'Accept-Encoding': 'gzip' },
   });
@@ -300,7 +300,7 @@ async function fetchFromADSBfi() {
     const callsign    = (a.flight || a.callsign || '').trim() || 'UNKNOWN';
     const lat         = a.lat || 0;
     const lng         = a.lon || a.lng || 0;
-    const altitude    = a.alt_baro ? Math.round(a.alt_baro) : 0;
+    const altitude    = a.alt_baro && a.alt_baro !== 'ground' ? Math.round(Number(a.alt_baro)) : 0;
     const velocity    = a.gs ? Math.round(a.gs) : 0;
     const heading     = a.track != null ? Math.round(a.track) : null;
     const verticalRate= a.baro_rate ? Math.round(a.baro_rate) : 0;
@@ -330,7 +330,57 @@ async function fetchFromADSBfi() {
       destLng: dest ? dest.lng : null,
       source: 'ADS-B.fi',
     };
+  }).filter(f => f.lat !== 0 && f.lng !== 0);
+
+  const flights = selectDistributed(allMilitary, 100, 10);
+  detectSurge(flights);
+  return flights;
+}
+
+// ─── Additional Fallback: airplanes.live ──────────────────
+async function fetchFromAirplanesLive() {
+  const res = await axios.get('https://api.airplanes.live/v2/mil_a', {
+    timeout: 12000,
+    headers: { 'Accept-Encoding': 'gzip' },
   });
+
+  const aircraft = res.data?.ac || [];
+
+  const allMilitary = aircraft.map(a => {
+    const callsign    = (a.flight || a.callsign || '').trim() || 'UNKNOWN';
+    const lat         = a.lat || 0;
+    const lng         = a.lon || a.lng || 0;
+    const altitude    = a.alt_baro && a.alt_baro !== 'ground' ? Math.round(Number(a.alt_baro)) : 0;
+    const velocity    = a.gs ? Math.round(a.gs) : 0;
+    const heading     = a.track != null ? Math.round(a.track) : null;
+    const verticalRate= a.baro_rate ? Math.round(a.baro_rate) : 0;
+    const icao24      = a.hex || '';
+    const squawk      = a.squawk || '';
+    const headingCompass = headingToCompass(heading);
+    const dest        = estimateDestination(lat, lng, heading, velocity);
+
+    let isNearConflict = false;
+    let nearConflictZone = null;
+    for (const zone of CONFLICT_ZONES) {
+      if (haversine(lat, lng, zone.lat, zone.lng) < zone.radius) {
+        isNearConflict = true;
+        nearConflictZone = zone.name;
+        break;
+      }
+    }
+
+    return {
+      callsign, icao24, lat, lng, altitude, velocity, heading, headingCompass,
+      verticalRate, squawk,
+      origin: a.r || 'Unknown',
+      aircraftType: a.t || getAircraftType(null, callsign),
+      silhouette: getAircraftSilhouette(null, callsign),
+      isNearConflict, nearConflictZone, isSurge: false,
+      destLat: dest ? dest.lat : null,
+      destLng: dest ? dest.lng : null,
+      source: 'airplanes.live',
+    };
+  }).filter(f => f.lat !== 0 && f.lng !== 0);
 
   const flights = selectDistributed(allMilitary, 100, 10);
   detectSurge(flights);
@@ -346,28 +396,37 @@ router.get('/', async (req, res) => {
     let flights = [];
     let source = 'DEMO';
 
-    // 1️⃣ Try OpenSky (authenticated)
+    // 1️⃣ Try ADS-B.fi v2 (no auth needed, confirmed working)
     try {
-      flights = await fetchFromOpenSky();
-      source = 'OpenSky';
-      console.log(`[flights] ✅ OpenSky: ${flights.length} tactical signals traced globally.`);
+      flights = await fetchFromADSBfi();
+      source = 'ADS-B.fi';
+      console.log(`[flights] ✅ ADS-B.fi: ${flights.length} tactical signals traced globally.`);
     } catch (err) {
-      console.warn('[flights] ⚠️ OpenSky failed:', err.message);
+      console.warn('[flights] ⚠️ ADS-B.fi failed:', err.message);
 
-      // 2️⃣ Try ADS-B.fi fallback
+      // 2️⃣ Try airplanes.live fallback
       try {
-        flights = await fetchFromADSBfi();
-        source = 'ADS-B.fi';
-        console.log(`[flights] ✅ ADS-B.fi fallback: ${flights.length} signals recovered.`);
+        flights = await fetchFromAirplanesLive();
+        source = 'airplanes.live';
+        console.log(`[flights] ✅ airplanes.live fallback: ${flights.length} signals recovered.`);
       } catch (err2) {
-        console.warn('[flights] ⚠️ ADS-B.fi also failed:', err2.message);
+        console.warn('[flights] ⚠️ airplanes.live failed:', err2.message);
+
+        // 3️⃣ Try OpenSky (authenticated, may be blocked on cloud IPs)
+        try {
+          flights = await fetchFromOpenSky();
+          source = 'OpenSky';
+          console.log(`[flights] ✅ OpenSky fallback: ${flights.length} signals recovered.`);
+        } catch (err3) {
+          console.warn('[flights] ⚠️ OpenSky also failed:', err3.message);
+        }
       }
     }
 
-    // 3️⃣ Last resort: demo data
+    // 4️⃣ Last resort: demo data
     const result = flights.length > 0 ? flights : DEMO_FLIGHTS;
     if (flights.length === 0) {
-      console.warn('[flights] ⚠️ Both sources failed — serving DEMO data.');
+      console.warn('[flights] ⚠️ All sources failed — serving DEMO data.');
     }
 
     // Cache for 5 minutes to protect API credits
