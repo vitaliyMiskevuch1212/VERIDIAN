@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import TerminalLoader from '../components/TerminalLoader';
+import SignalAccuracyDashboard from '../components/SignalAccuracyDashboard';
 import { useData } from '../context/DataContext';
+import { exportSignal, copyToClipboard, downloadReport } from '../utils/exportReport';
+import ExportButton from '../components/ExportButton';
 
 // ─── Sub-Components ─────────────────────────────────────────────
 
@@ -114,7 +117,12 @@ function SignalDetailCard({ signal }) {
               </div>
               <div className="flex items-center gap-3 text-white/25 text-[10px] font-mono">
                 <span>{timestamp}</span>
-                <span className="text-white/15">{timeAgo}</span>
+                <span className="text-white/15 mr-2">{timeAgo}</span>
+                <ExportButton
+                  label="Export"
+                  onCopy={() => copyToClipboard(exportSignal(signal))}
+                  onDownload={() => downloadReport(exportSignal(signal), `veridian-signal-${signal.ticker}.txt`)}
+                />
               </div>
             </div>
             {/* Confidence */}
@@ -358,6 +366,25 @@ export default function SignalsFullPage({ onClose }) {
                 <div className="h-32 flex items-center justify-center text-white/10 text-[10px] font-mono">No data yet</div>
               )}
             </div>
+          </div>
+
+          {/* Backtest Accuracy Dashboard */}
+          <div className="bg-[var(--color-card)] border border-white/[0.05] rounded-md overflow-hidden">
+            <details>
+              <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-center gap-3">
+                  <i className="fa-solid fa-flask text-[var(--color-green)]" style={{ fontSize: 16 }} />
+                  <div>
+                    <h3 className="text-white font-bold text-sm">Backtest Accuracy</h3>
+                    <p className="text-white/25 text-[10px] font-mono uppercase tracking-wider">Signal verification against actual price movement</p>
+                  </div>
+                </div>
+                <i className="fa-solid fa-chevron-down text-white/20 text-xs" />
+              </summary>
+              <div className="border-t border-white/[0.05]">
+                <SignalAccuracyDashboard />
+              </div>
+            </details>
           </div>
 
           {/* Filters */}

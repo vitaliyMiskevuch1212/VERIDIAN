@@ -1,5 +1,7 @@
 import React from 'react';
 import TerminalLoader from './TerminalLoader';
+import { exportSitrep, copyToClipboard, downloadReport } from '../utils/exportReport';
+import ExportButton from './ExportButton';
 
 const THREAT_COLORS = {
   LOW: { bg: 'rgba(0, 255, 136, 0.08)', border: 'rgba(0, 255, 136, 0.3)', text: 'var(--color-green)' },
@@ -30,10 +32,17 @@ export default function SitrepPanel({ data, loading }) {
   return (
     <div className="flex flex-col h-full bg-[#0A0F1E]" style={{ overflow: 'hidden' }}>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-center gap-2">
-        <i className="fa-solid fa-shield-halved text-[var(--color-red)] text-sm"></i>
-        <h2 className="text-white font-heading uppercase tracking-[0.3em] text-[11px]">SITREP</h2>
-        <i className="fa-solid fa-satellite text-white/40 text-[10px] ml-1"></i>
+      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <i className="fa-solid fa-shield-halved text-[var(--color-red)] text-sm"></i>
+          <h2 className="text-white font-heading uppercase tracking-[0.3em] text-[11px]">SITREP</h2>
+          <i className="fa-solid fa-satellite text-white/40 text-[10px] ml-1"></i>
+        </div>
+        <ExportButton
+          label="Export"
+          onCopy={() => copyToClipboard(exportSitrep(data))}
+          onDownload={() => downloadReport(exportSitrep(data), `veridian-sitrep-${Date.now()}.txt`)}
+        />
       </div>
 
       {/* Content */}

@@ -163,6 +163,32 @@ export default function TradeFullPage({ onClose }) {
 
   const [ticker, setTicker] = useState('');
 
+  // Manual Portfolio State
+  const [portfolio, setPortfolio] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('veridian_portfolio')) || ['AAPL', 'TSLA', 'BTC', 'NVDA']; } 
+    catch { return ['AAPL', 'TSLA', 'BTC', 'NVDA']; }
+  });
+  const [newPortfolioTicker, setNewPortfolioTicker] = useState('');
+
+  const addPortfolioItem = (e) => {
+    e.preventDefault();
+    if (!newPortfolioTicker) return;
+    const sym = newPortfolioTicker.toUpperCase().trim();
+    if (sym && !portfolio.includes(sym)) {
+      const p = [...portfolio, sym];
+      setPortfolio(p);
+      localStorage.setItem('veridian_portfolio', JSON.stringify(p));
+    }
+    setNewPortfolioTicker('');
+  };
+
+  const removePortfolioItem = (sym, e) => {
+    e.stopPropagation();
+    const p = portfolio.filter(t => t !== sym);
+    setPortfolio(p);
+    localStorage.setItem('veridian_portfolio', JSON.stringify(p));
+  };
+
   const handleSearch = useCallback((sym) => {
     const s = sym.trim().toUpperCase();
     if (s) fetchQuote(s);
@@ -237,6 +263,38 @@ export default function TradeFullPage({ onClose }) {
               </div>
             </div>
           )}
+
+          {/* Manual Watchlist / Portfolio */}
+          <div className="bg-[#0D1520] border border-white/5 rounded-sm p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <i className="fa-solid fa-list-check text-white/40" />
+                <span className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">Manual Portfolio Watchlist</span>
+              </div>
+              <form onSubmit={addPortfolioItem} className="flex items-center gap-2">
+                <input type="text" placeholder="Add ticker..." value={newPortfolioTicker} onChange={e => setNewPortfolioTicker(e.target.value)}
+                  className="bg-black/40 border border-white/10 rounded-sm px-3 py-1.5 text-[10px] text-white outline-none w-32 focus:border-[var(--color-cyan)]" />
+                <button type="submit" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-sm text-[10px] text-white/60 hover:text-white transition-all cursor-pointer">
+                  Add
+                </button>
+              </form>
+            </div>
+            {portfolio.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {portfolio.map((sym) => (
+                  <div key={sym} onClick={() => { setTicker(sym); handleSearch(sym); }}
+                    className="flex items-center justify-between bg-white/[0.02] border border-white/5 hover:border-white/20 rounded-sm p-2 transition-all cursor-pointer group">
+                    <span className="text-white font-bold text-xs">{sym}</span>
+                    <button onClick={(e) => removePortfolioItem(sym, e)} className="text-white/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer p-1">
+                      <i className="fa-solid fa-xmark text-[10px]"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-[10px] text-white/20 font-mono text-center py-4">No tickers in watchlist. Add one to track.</div>
+            )}
+          </div>
 
           {/* Loading */}
           {financeLoading && (

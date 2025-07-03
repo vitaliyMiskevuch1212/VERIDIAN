@@ -21,6 +21,8 @@ import ScrambleText from './ScrambleText';
 import DroneFeed from './DroneFeed';
 import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts';
 import MarketGraph from './MarketGraph';
+import { exportBrief, copyToClipboard, downloadReport } from '../utils/exportReport';
+import ExportButton from './ExportButton';
 
 // ---------------------------------------------------------------------------
 // Helper utilities
@@ -205,17 +207,6 @@ export default function CountryBrief({ country, onClose }) {
   // Actions
   // -------------------------------------------------------------------------
 
-  /**
-   * Copies a plain-text summary of the current brief to the clipboard.
-   * Useful for pasting into external reports or messaging tools.
-   */
-  const handleCopy = () => {
-    const text = brief
-      ? `VERIDIAN Intel Brief: ${country}\nStability: ${brief.stabilityScore}/100\nOutlook: ${brief.outlook}\nConfidence: ${brief.confidenceLevel}%\n\n${brief.briefText}`
-      : '';
-    navigator.clipboard.writeText(text);
-  };
-
   // -------------------------------------------------------------------------
   // Layout decisions
   // -------------------------------------------------------------------------
@@ -285,14 +276,12 @@ export default function CountryBrief({ country, onClose }) {
             </div>
           )}
 
-          {/* Copy-to-clipboard action */}
-          <button
-            onClick={handleCopy}
-            className="p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-            style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)' }}
-          >
-            <i className="fa-solid fa-copy"></i>
-          </button>
+          {/* Export button */}
+          <ExportButton 
+            label="" 
+            onCopy={() => copyToClipboard(exportBrief(brief))}
+            onDownload={() => downloadReport(exportBrief(brief), `veridian-brief-${country.toLowerCase()}.txt`)}
+          />
 
           {/* Dismiss panel */}
           <button

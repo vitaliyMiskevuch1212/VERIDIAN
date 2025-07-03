@@ -76,7 +76,7 @@ export default function DashboardRightPanel() {
   if (!rightPanelVisible) return null;
 
   return (
-    <div className="w-[340px] flex-shrink-0 bg-gradient-to-b from-[#070C18]/95 via-[#090E1C]/95 to-[#0C1222]/95 backdrop-blur-2xl border-l border-white/[0.05] flex flex-col z-40 overflow-hidden panel-slide-in-right">
+    <div className="absolute md:relative inset-y-0 right-0 w-[85vw] sm:w-[340px] md:w-[340px] flex-shrink-0 bg-gradient-to-b from-[#070C18]/95 via-[#090E1C]/95 to-[#0C1222]/95 backdrop-blur-2xl border-l border-white/[0.05] flex flex-col z-40 overflow-hidden panel-slide-in-right shadow-[-15px_0_30px_rgba(0,0,0,0.6)] md:shadow-none">
       {/* Tab Header */}
       <div className="flex border-b border-white/[0.06] bg-black/30">
         {[
