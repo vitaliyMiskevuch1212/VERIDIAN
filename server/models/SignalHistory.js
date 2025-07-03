@@ -15,6 +15,13 @@ const signalHistorySchema = new mongoose.Schema({
   triggerType:  { type: String, enum: ['manual', 'auto'], default: 'manual' },
   triggerEvent: { type: String, default: '' },  // title of event that triggered auto-signal
 
+  // Backtest fields — populated retroactively after 24h
+  priceAtSignal:  { type: Number, default: null },
+  priceAfter24h:  { type: Number, default: null },
+  actualChange:   { type: Number, default: null },  // % change
+  wasCorrect:     { type: Boolean, default: null },  // did signal direction match price movement?
+  backtestDate:   { type: Date, default: null },
+
   // Auto-cleanup: MongoDB TTL index deletes docs 7 days after creation
   createdAt: { type: Date, default: Date.now, expires: 604800 }  // 7 days in seconds
 });
