@@ -5,6 +5,7 @@ import OmniCommand from '../components/OmniCommand';
 import KeyboardShortcuts from '../components/KeyboardShortcuts';
 import TargetingCursor from '../components/TargetingCursor';
 import PageLoader from '../components/PageLoader';
+import FridayHUD from '../components/FridayHUD';
 import { useData } from '../context/DataContext';
 import { useUI } from '../context/UIContext';
 
@@ -57,6 +58,9 @@ export default function DashboardOverlays({ isInitialLoad, setIsInitialLoad }) {
 
       {/* GLOBAL PAGE LOADER */}
       {isInitialLoad && <PageLoader onComplete={() => setIsInitialLoad(false)} />}
+
+      {/* FRIDAY VOICE ASSISTANT HUD */}
+      <FridayHUD />
     </>
   );
 }

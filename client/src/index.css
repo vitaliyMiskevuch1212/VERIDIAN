@@ -1382,3 +1382,318 @@ select:focus-visible,
   background: rgba(0, 212, 255, 0.3);
   color: white;
 }
+
+/* =====================================================================
+   FRIDAY Voice Assistant HUD
+   ===================================================================== */
+
+/* ── Mic Badge (top-right) ── */
+.friday-badge {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 10px;
+  border-radius: 20px;
+  background: rgba(10, 15, 30, 0.85);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  backdrop-filter: blur(12px);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--friday-color, #64748b);
+  box-shadow: var(--friday-glow, none);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+}
+.friday-badge__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--friday-color, #64748b);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.friday-badge--standby .friday-badge__dot {
+  animation: fridayDotPulse 3s ease-in-out infinite;
+}
+.friday-badge--listening .friday-badge__dot,
+.friday-badge--speaking .friday-badge__dot {
+  animation: fridayDotPulse 1s ease-in-out infinite;
+}
+.friday-badge--processing .friday-badge__dot {
+  animation: fridayDotSpin 1s linear infinite;
+}
+.friday-badge__icon {
+  font-size: 11px;
+  color: var(--friday-color, #64748b);
+  transition: color 0.3s ease;
+}
+.friday-badge__label {
+  color: var(--friday-color, #64748b);
+  transition: color 0.3s ease;
+}
+.friday-badge__toggle {
+  margin-left: 6px;
+  padding: 2px 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 9px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+.friday-badge__toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--friday-color, #64748b);
+  border-color: var(--friday-color, #64748b);
+}
+
+/* ── Listening state glow ── */
+.friday-badge--listening {
+  border-color: rgba(0, 212, 255, 0.5);
+  animation: fridayBadgePulse 1.5s ease-in-out infinite;
+}
+.friday-badge--speaking {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.friday-badge--processing {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* ── Push-to-Talk Button ── */
+.friday-ptt {
+  position: fixed;
+  top: 56px;
+  right: 16px;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(10, 15, 30, 0.85);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  backdrop-filter: blur(12px);
+  color: rgba(0, 212, 255, 0.6);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: fixed;
+  overflow: visible;
+}
+.friday-ptt:hover {
+  border-color: rgba(0, 212, 255, 0.4);
+  background: rgba(0, 212, 255, 0.06);
+  transform: scale(1.02);
+}
+.friday-ptt i {
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+.friday-ptt__label {
+  margin-top: 2px;
+}
+.friday-ptt--active {
+  border-color: rgba(0, 212, 255, 0.6);
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.3), inset 0 0 12px rgba(0, 212, 255, 0.05);
+  color: #00D4FF;
+}
+.friday-ptt--active i {
+  animation: fridayMicPulse 0.8s ease-in-out infinite;
+}
+.friday-ptt:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* PTT rings */
+.friday-ptt__rings {
+  position: absolute;
+  inset: -8px;
+  pointer-events: none;
+}
+.friday-ptt__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 212, 255, 0);
+  transition: all 0.3s ease;
+}
+.friday-ptt--active .friday-ptt__ring--1 {
+  inset: -4px;
+  border-color: rgba(0, 212, 255, 0.2);
+  animation: fridayRingExpand 2s ease-out infinite;
+}
+.friday-ptt--active .friday-ptt__ring--2 {
+  inset: -8px;
+  border-color: rgba(0, 212, 255, 0.1);
+  animation: fridayRingExpand 2s ease-out 0.5s infinite;
+}
+
+/* ── Transcript Preview ── */
+.friday-transcript {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: rgba(0, 212, 255, 0.06);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: rgba(0, 212, 255, 0.8);
+  max-width: 500px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: fridaySlideUp 0.3s ease-out;
+}
+.friday-transcript__icon {
+  font-size: 11px;
+  color: rgba(0, 212, 255, 0.5);
+  animation: fridayMicPulse 1s ease-in-out infinite;
+}
+
+/* ── Subtitle Bar (bottom center) ── */
+.friday-subtitle {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: rgba(10, 15, 30, 0.92);
+  border: 1px solid rgba(30, 58, 95, 0.6);
+  backdrop-filter: blur(16px);
+  border-radius: 10px;
+  max-width: 650px;
+  animation: fridaySlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.friday-subtitle__indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.friday-subtitle__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #00D4FF;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+}
+.friday-subtitle__text {
+  font-size: 13px;
+  color: #E2E8F0;
+  line-height: 1.5;
+}
+
+/* Waveform animation when speaking */
+.friday-subtitle__waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
+}
+.friday-subtitle__bar {
+  width: 2px;
+  height: 4px;
+  background: #10B981;
+  border-radius: 1px;
+  animation: fridayWaveform 0.6s ease-in-out infinite alternate;
+}
+
+/* Processing dots */
+.friday-subtitle__dots {
+  display: flex;
+  gap: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 800;
+  color: #F59E0B;
+}
+.friday-subtitle__dots span {
+  animation: fridayDots 1.4s ease-in-out infinite;
+}
+.friday-subtitle__dots span:nth-child(2) { animation-delay: 0.2s; }
+.friday-subtitle__dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Error Display ── */
+.friday-error {
+  position: fixed;
+  top: 16px;
+  right: 200px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  font-size: 11px;
+  color: #EF4444;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ══════ FRIDAY Animations ══════ */
+@keyframes fridayDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+@keyframes fridayDotSpin {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(1); }
+}
+@keyframes fridayBadgePulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 212, 255, 0.3); }
+  50% { box-shadow: 0 0 28px rgba(0, 212, 255, 0.6); }
+}
+@keyframes fridayMicPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; transform: scale(1.1); }
+}
+@keyframes fridayRingExpand {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+@keyframes fridaySlideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes fridayWaveform {
+  0% { height: 3px; }
+  25% { height: 12px; }
+  50% { height: 6px; }
+  75% { height: 14px; }
+  100% { height: 4px; }
+}
+@keyframes fridayDots {
+  0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+

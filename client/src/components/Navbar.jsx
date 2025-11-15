@@ -119,6 +119,14 @@ export default function Navbar({
            <span className="tracking-tighter">{serverClients > 0 ? serverClients : 248}+ USERS</span>
         </div>
 
+        {/* FRIDAY status badge */}
+        <div className="flex items-center gap-1.5 mr-2 pl-3 border-l border-white/[0.08]">
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-cyan)] shadow-[0_0_6px_var(--color-cyan)] animate-pulse"></div>
+          <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-[var(--color-cyan)]/60">
+            FRIDAY
+          </span>
+        </div>
+
         {/* Comms toggle */}
         <div onClick={onCommsToggle} className="mr-2 cursor-pointer">
             <TacticalButton 

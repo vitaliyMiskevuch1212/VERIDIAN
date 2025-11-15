@@ -7,6 +7,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cache = require('./services/cacheService');
 const signalEngine = require('./services/signalEngine');
+const fridayBridge = require('./services/fridayBridge');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -59,6 +60,7 @@ app.use('/api/flights', require('./routes/flights'));
 app.use('/api/vessels', require('./routes/vessels'));
 app.use('/api/cyber',   require('./routes/cyber'));
 app.use('/api/chokepoints', require('./routes/chokepoints'));
+app.use('/api/friday',  require('./routes/friday'));
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ 
@@ -193,6 +195,10 @@ async function startServer() {
     // Initialize the automatic signal engine with Socket.IO
     signalEngine.init(io);
     console.log(`[VERIDIAN] Signal Engine armed — auto-signal pipeline ACTIVE`);
+
+    // Initialize FRIDAY voice bridge with Socket.IO
+    fridayBridge.init(io);
+    console.log(`[VERIDIAN] FRIDAY Voice Agent bridge ONLINE`);
   });
 }
 

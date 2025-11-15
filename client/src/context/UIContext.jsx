@@ -235,7 +235,49 @@ export function UIProvider({ children }) {
       }
     });
 
-    return () => { unsub1(); unsub2(); unsub3(); unsub4(); };
+    // ─── FRIDAY Voice Agent Command Listeners ──────────────────
+    const unsub5 = onEvent('friday:command', ({ action, payload }) => {
+      switch (action) {
+        case 'FLY_TO':
+          if (payload?.lat && payload?.lng) {
+            setFlyToTarget({ lat: payload.lat, lng: payload.lng });
+          }
+          break;
+        case 'OPEN_PANEL': {
+          const p = payload?.panel;
+          // Map FRIDAY panel names to UIContext state changes
+          if (['finance', 'news', 'predictions', 'sitrep', 'signals'].includes(p)) {
+            setActiveTab(p);
+            setRightPanelVisible(true);
+          }
+          if (p === 'flights') { setShowFlights(true); setLeftPanelVisible(true); }
+          if (p === 'vessels') { setShowVessels(true); setLeftPanelVisible(true); }
+          if (p === 'cyber') { setShowCyber(true); }
+          if (p === 'regions') { setShowRegions(true); }
+          if (p === 'wargame') { /* Needs event data — handled separately */ }
+          audio.playClick();
+          break;
+        }
+        case 'CLOSE_ALL':
+          setLeftPanelVisible(false);
+          setRightPanelVisible(false);
+          setSelectedCountry(null);
+          setShowFlights(false);
+          setShowVessels(false);
+          setShowCyber(false);
+          setShowRegions(false);
+          audio.playClick();
+          break;
+        case 'SELECT_COUNTRY':
+          if (payload?.country) setSelectedCountry(payload.country);
+          break;
+        case 'HIGHLIGHT_EVENT':
+          // Future: pulse a specific event on the globe
+          break;
+      }
+    });
+
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); };
   }, [onEvent, toast, audio, addAutoSignals, setAutoWatchlist, fetchSignalHistory, fetchSignalStats]);
 
   // Monitor News for CRITICAL Alerts
