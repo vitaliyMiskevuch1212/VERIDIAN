@@ -666,31 +666,3 @@ npm run dev    # Starts client and server simultaneously
 > **"Every tool shows you WHAT is happening. VERIDIAN tells you WHAT TO DO about it."**
 
 `Built in 24 hours` · `MERN Stack` · `$0 to run` · `Zero mock data` · `30+ free APIs`
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-## 👨‍💻 Team
-
-<div align="center">
-
-**Built with ❤️ by [Harnoor Kaur, Prince Sagwal, Piyush Kumar, Prakash Tiwari]**
-
-[![GitHub](https://img.shields.io/badge/GitHub-Team-181717?style=for-the-badge&logo=github)](https://github.com/yourusername)
-
-</div>
-
----
-
-<div align="center">
-
-### ⭐ Star this repository if you found it useful!
-
-*Where Geopolitics Meets Trading Intelligence*
-
-</div>
